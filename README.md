@@ -39,3 +39,11 @@ The server binds to all interfaces on port 8000, so any device on your tailnet c
 - Aliens get faster and more frequent the longer you survive
 - Best score is saved on the device (localStorage)
 - Touch an alien and you get "bonked" — tap to fly again
+
+## Sound
+
+All audio is synthesized live with the Web Audio API (no sound files):
+dreamy space background music, a "pew" when you shoot, a happy pop when
+an alien is hit, and a wobbly "womp" when the jet crashes. Tap the 🔊
+button in the top-right corner to mute/unmute (remembered per device).
+Sound starts after the first tap — browsers require a user gesture.

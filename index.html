@@ -143,10 +143,28 @@
     color: #9db8e8;
     text-shadow: 0 2px 5px rgba(0,0,0,0.7);
   }
+  #mute-btn {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 14px;
+    z-index: 20;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(20, 25, 60, 0.55);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+    font-size: 22px;
+    line-height: 1;
+    touch-action: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
+
+<button id="mute-btn" aria-label="Toggle sound">🔊</button>
 
 <div id="hud">
   <div id="score">0</div>
@@ -723,6 +741,7 @@ function fireBullet() {
   if (state !== 'playing') return;
   const s = jet.w / 64;
   bullets.push({ x: jet.x, y: jet.y - 36 * s, vy: -980 * K });
+  sfxShoot();
 }
 
 function updateBullets(dt) {
@@ -741,6 +760,7 @@ function updateBullets(dt) {
         score++;
         scoreEl.textContent = score;
         spawnPopup(a.x, a.y);
+        sfxPop();
         break;
       }
     }
@@ -826,6 +846,214 @@ function updateAndDrawBursts(dt) {
   ctx.restore();
 }
 
+// ---------- Audio (Web Audio API — everything synthesized, no files) ----------
+let AC = null, masterGain, musicGain, sfxGain, noiseBuf;
+let muted = false;
+try { muted = localStorage.getItem('ashleyJetMuted') === '1'; } catch (e) {}
+
+const NOTE = (m) => 440 * Math.pow(2, (m - 69) / 12);
+const BAR_LEN = 4; // seconds per chord
+// Dreamy loop: Am -> F -> C -> G (each entry is a midi-note stack)
+const CHORDS = [
+  [45, 57, 60, 64],
+  [41, 53, 57, 60],
+  [48, 55, 60, 64],
+  [43, 55, 59, 62],
+];
+const TWINKLE_NOTES = [69, 72, 74, 76, 79, 81, 84]; // A-minor pentatonic sparkles
+let nextBarTime = 0, barIndex = 0;
+
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  AC = new Ctx();
+  masterGain = AC.createGain();
+  masterGain.gain.value = muted ? 0 : 1;
+  masterGain.connect(AC.destination);
+  musicGain = AC.createGain();
+  musicGain.gain.value = 0.5;
+  musicGain.connect(masterGain);
+  sfxGain = AC.createGain();
+  sfxGain.gain.value = 0.9;
+  sfxGain.connect(masterGain);
+  // Reusable white-noise buffer for percussive sounds
+  noiseBuf = AC.createBuffer(1, AC.sampleRate * 0.5, AC.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  nextBarTime = AC.currentTime + 0.1;
+  setInterval(musicTick, 300); // lookahead scheduler keeps the loop seamless
+}
+
+function musicTick() {
+  while (nextBarTime < AC.currentTime + 1.5) {
+    scheduleBar(nextBarTime, CHORDS[barIndex % CHORDS.length]);
+    nextBarTime += BAR_LEN;
+    barIndex++;
+  }
+}
+
+function scheduleBar(t, chord) {
+  const end = t + BAR_LEN;
+  const filter = AC.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 1100;
+  filter.connect(musicGain);
+
+  // Soft detuned pads, overlapping bar edges so chords melt into each other
+  chord.forEach((m, i) => {
+    for (const det of [-5, 5]) {
+      const o = AC.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = NOTE(m);
+      o.detune.value = det;
+      const g = AC.createGain();
+      const vol = i === 0 ? 0.05 : 0.032;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 1.4);
+      g.gain.setValueAtTime(vol, end - 0.4);
+      g.gain.linearRampToValueAtTime(0, end + 1.2);
+      o.connect(g); g.connect(filter);
+      o.start(t); o.stop(end + 1.3);
+    }
+  });
+
+  // Sub bass on the root
+  const b = AC.createOscillator();
+  b.type = 'sine';
+  b.frequency.value = NOTE(chord[0] - 12);
+  const bg = AC.createGain();
+  bg.gain.setValueAtTime(0, t);
+  bg.gain.linearRampToValueAtTime(0.07, t + 0.8);
+  bg.gain.setValueAtTime(0.07, end - 0.5);
+  bg.gain.linearRampToValueAtTime(0, end + 0.6);
+  b.connect(bg); bg.connect(musicGain);
+  b.start(t); b.stop(end + 0.7);
+
+  // Random starry twinkles sprinkled through the bar
+  const count = 2 + (Math.random() * 3 | 0);
+  for (let i = 0; i < count; i++) {
+    const tt = t + rand(0, BAR_LEN - 0.6);
+    const o = AC.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = NOTE(pick(TWINKLE_NOTES));
+    const g = AC.createGain();
+    const decay = rand(0.5, 1.1);
+    g.gain.setValueAtTime(0, tt);
+    g.gain.linearRampToValueAtTime(rand(0.025, 0.045), tt + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0005, tt + decay);
+    o.connect(g);
+    if (AC.createStereoPanner) {
+      const pan = AC.createStereoPanner();
+      pan.pan.value = rand(-0.8, 0.8);
+      g.connect(pan); pan.connect(musicGain);
+    } else {
+      g.connect(musicGain);
+    }
+    o.start(tt); o.stop(tt + decay + 0.1);
+  }
+}
+
+function sfxShoot() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  const o = AC.createOscillator();
+  o.type = 'square';
+  o.frequency.setValueAtTime(880, t);
+  o.frequency.exponentialRampToValueAtTime(180, t + 0.13);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.11, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+  o.connect(g); g.connect(sfxGain);
+  o.start(t); o.stop(t + 0.15);
+}
+
+function sfxPop() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  const vary = rand(0.9, 1.2); // each pop slightly different pitch
+  const o = AC.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(320 * vary, t);
+  o.frequency.exponentialRampToValueAtTime(900 * vary, t + 0.09);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.22, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+  o.connect(g); g.connect(sfxGain);
+  o.start(t); o.stop(t + 0.23);
+  // Sparkly noise burst on top
+  const src = AC.createBufferSource();
+  src.buffer = noiseBuf;
+  const bp = AC.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 2600;
+  bp.Q.value = 1;
+  const ng = AC.createGain();
+  ng.gain.setValueAtTime(0.1, t);
+  ng.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  src.connect(bp); bp.connect(ng); ng.connect(sfxGain);
+  src.start(t); src.stop(t + 0.13);
+}
+
+function sfxCrash() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  // Wobbly descending "womp"
+  const o = AC.createOscillator();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(300, t);
+  o.frequency.exponentialRampToValueAtTime(55, t + 1.0);
+  const lfo = AC.createOscillator();
+  lfo.frequency.value = 9;
+  const lfoGain = AC.createGain();
+  lfoGain.gain.value = 22;
+  lfo.connect(lfoGain); lfoGain.connect(o.frequency);
+  const lp = AC.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 900;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.3, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+  o.connect(lp); lp.connect(g); g.connect(sfxGain);
+  o.start(t); o.stop(t + 1.25);
+  lfo.start(t); lfo.stop(t + 1.25);
+  // Low thump
+  const src = AC.createBufferSource();
+  src.buffer = noiseBuf;
+  const tlp = AC.createBiquadFilter();
+  tlp.type = 'lowpass';
+  tlp.frequency.value = 220;
+  const ng = AC.createGain();
+  ng.gain.setValueAtTime(0.5, t);
+  ng.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+  src.connect(tlp); tlp.connect(ng); ng.connect(sfxGain);
+  src.start(t); src.stop(t + 0.36);
+  // Duck the music, then bring it back
+  musicGain.gain.cancelScheduledValues(t);
+  musicGain.gain.setValueAtTime(0.15, t);
+  musicGain.gain.linearRampToValueAtTime(0.5, t + 2.5);
+}
+
+// Mute toggle
+const muteBtn = document.getElementById('mute-btn');
+function updateMuteBtn() { muteBtn.textContent = muted ? '🔇' : '🔊'; }
+muteBtn.addEventListener('pointerdown', (e) => {
+  e.stopPropagation(); // don't let the tap steer, shoot, or (re)start the game
+  e.preventDefault();
+  muted = !muted;
+  try { localStorage.setItem('ashleyJetMuted', muted ? '1' : '0'); } catch (err) {}
+  initAudio(); // a button press is a valid unlock gesture
+  if (masterGain) masterGain.gain.value = muted ? 0 : 1;
+  updateMuteBtn();
+});
+updateMuteBtn();
+
+// Pause audio when the tab is hidden
+document.addEventListener('visibilitychange', () => {
+  if (!AC) return;
+  if (document.hidden) AC.suspend(); else AC.resume();
+});
+
 // ---------- Game state ----------
 let state = 'menu'; // 'menu' | 'playing' | 'over'
 let score = 0;
@@ -857,6 +1085,7 @@ function startGame() {
 function gameOver() {
   state = 'over';
   crashTime = 0;
+  sfxCrash();
   hudEl.classList.remove('visible');
   const isNewBest = score > best;
   if (isNewBest) {
@@ -891,6 +1120,7 @@ const TAP_MAX_MS = 280;    // press longer than this = steering, not shooting
 
 window.addEventListener('pointerdown', (e) => {
   e.preventDefault();
+  initAudio(); // browsers only allow audio to start from a user gesture
   if (state === 'menu') { startGame(); return; }
   if (state === 'over') {
     // small delay so a frantic dodge-tap doesn't instantly restart
@@ -925,6 +1155,7 @@ window.addEventListener('pointercancel', () => { dragging = false; });
 const keys = {};
 window.addEventListener('keydown', (e) => {
   keys[e.key] = true;
+  initAudio();
   if ((e.key === ' ' || e.key === 'Enter')) {
     if (state === 'menu') startGame();
     else if (state === 'over' && performance.now() - overSince > 900) startGame();
