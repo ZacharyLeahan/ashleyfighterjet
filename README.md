@@ -7,19 +7,22 @@ and tap to shoot them down.
 Everything lives in a single `index.html` — vanilla HTML5 Canvas, zero dependencies,
 no build step.
 
-## Run it
+## Play it
+
+**▶️ https://ashleyfighterjet.onrender.com/** — works great on a phone in portrait mode.
+
+## Run it locally
 
 ```
 node server.js
 ```
 
-Then open:
+Then open http://localhost:8000.
 
-- **On this PC:** http://localhost:8000
-- **On your phone (via Tailscale):** http://100.118.156.77:8000
-  (or use the machine's MagicDNS name, e.g. `http://<machine-name>:8000`)
-
-The server binds to all interfaces on port 8000, so any device on your tailnet can reach it.
+The server binds to all interfaces on port 8000. During development I used
+[Tailscale](https://tailscale.com/) to playtest on a phone: with both devices
+on the same tailnet, just open `http://<your-machine's-tailscale-ip-or-magicdns-name>:8000`
+on the phone — no port forwarding or deployment needed.
 
 > **If the phone can't connect:** Windows Firewall may be blocking inbound
 > connections to Node. Allow it via the popup Windows shows the first time,
