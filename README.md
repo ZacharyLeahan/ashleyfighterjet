@@ -30,7 +30,8 @@ The server binds to all interfaces on port 8000, so any device on your tailnet c
 
 - **Mobile:** press and drag your thumb anywhere on the screen — the jet follows left/right.
   Quick **tap** (without dragging) to fire a bullet — tap 3 times for 3 bullets.
-- **Desktop:** ← / → arrow keys (or A/D) to steer, Space/Enter to shoot (and to start)
+- **Desktop:** the jet follows your mouse cursor (no click needed); left-click to shoot.
+  Arrow keys / A-D also steer, and Space/Enter shoots (and starts the game)
 
 ## Gameplay
 

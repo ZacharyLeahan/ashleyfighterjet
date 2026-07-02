@@ -868,6 +868,13 @@ function initAudio() {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx) return;
   AC = new Ctx();
+  // iOS/Safari often creates the context suspended even inside a tap handler:
+  // resume immediately and play a 1-sample silent buffer to force the unlock.
+  if (AC.state === 'suspended') AC.resume();
+  const unlock = AC.createBufferSource();
+  unlock.buffer = AC.createBuffer(1, 1, 22050);
+  unlock.connect(AC.destination);
+  unlock.start(0);
   masterGain = AC.createGain();
   masterGain.gain.value = muted ? 0 : 1;
   masterGain.connect(AC.destination);
@@ -1127,6 +1134,11 @@ window.addEventListener('pointerdown', (e) => {
     if (performance.now() - overSince > 900) startGame();
     return;
   }
+  if (e.pointerType === 'mouse') {
+    // Desktop: the jet already follows the cursor — left click just shoots
+    if (e.button === 0) fireBullet();
+    return;
+  }
   dragging = true;
   lastPointerX = e.clientX;
   downX = e.clientX;
@@ -1135,7 +1147,13 @@ window.addEventListener('pointerdown', (e) => {
 }, { passive: false });
 
 window.addEventListener('pointermove', (e) => {
-  if (!dragging || state !== 'playing') return;
+  if (state !== 'playing') return;
+  if (e.pointerType === 'mouse') {
+    // Desktop: jet tracks the cursor, no button needed
+    jet.targetX = clamp(e.clientX, jet.w * 0.55, W - jet.w * 0.55);
+    return;
+  }
+  if (!dragging) return;
   e.preventDefault();
   const dx = e.clientX - lastPointerX;
   lastPointerX = e.clientX;
@@ -1143,7 +1161,8 @@ window.addEventListener('pointermove', (e) => {
 }, { passive: false });
 
 window.addEventListener('pointerup', (e) => {
-  if (dragging && state === 'playing') {
+  initAudio(); // iOS sometimes only honors the unlock on the release gesture
+  if (dragging && state === 'playing' && e.pointerType !== 'mouse') {
     const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
     if (dist < TAP_MAX_DIST && performance.now() - downTime < TAP_MAX_MS) fireBullet();
   }
