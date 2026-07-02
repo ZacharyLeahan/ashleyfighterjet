@@ -280,9 +280,11 @@ function resize() {
   buildVignette();
   initStars();
   jet.w = Math.max(40, Math.min(W * 0.15, 72 * K));
-  jet.y = H - jet.w * 1.7 - 14;
-  jet.x = clamp(jet.x || W / 2, jet.w, W - jet.w);
+  const m = jetMargins();
+  jet.y = clamp(jet.y || m.defaultY, m.minY, m.maxY);
+  jet.x = clamp(jet.x || W / 2, m.x, W - m.x);
   jet.targetX = jet.x;
+  jet.targetY = clamp(jet.targetY || jet.y, m.minY, m.maxY);
 }
 
 function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
@@ -385,59 +387,6 @@ function updateAndDrawStars(dt, t, speedMul) {
   ctx.globalAlpha = 1;
 }
 
-// ---------- Drifting planet (background decoration) ----------
-const planet = { active: false, x: 0, y: 0, r: 0, hue: 0, hasRing: true, timer: 4 };
-function updateAndDrawPlanet(dt, speedMul) {
-  if (!planet.active) {
-    planet.timer -= dt;
-    if (planet.timer <= 0) {
-      planet.active = true;
-      planet.r = rand(34, 72) * K;
-      planet.x = rand(planet.r, W - planet.r);
-      planet.y = -planet.r * 2.5;
-      planet.hue = pick([18, 160, 200, 268, 320]);
-      planet.hasRing = Math.random() < 0.6;
-    }
-    return;
-  }
-  planet.y += 14 * K * speedMul * dt;
-  if (planet.y > H + planet.r * 2.5) {
-    planet.active = false;
-    planet.timer = rand(14, 26);
-    return;
-  }
-  const { x, y, r, hue } = planet;
-  ctx.save();
-  ctx.globalAlpha = 0.85;
-  // Body with day/night shading
-  const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
-  g.addColorStop(0, `hsl(${hue}, 65%, 68%)`);
-  g.addColorStop(0.6, `hsl(${hue}, 60%, 45%)`);
-  g.addColorStop(1, `hsl(${hue}, 55%, 22%)`);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fill();
-  // Surface bands
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.fillStyle = `hsla(${hue}, 60%, 75%, 0.25)`;
-  ctx.beginPath(); ctx.ellipse(x, y - r * 0.3, r * 1.1, r * 0.16, 0.1, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x, y + r * 0.25, r * 1.1, r * 0.12, -0.08, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
-  // Ring
-  if (planet.hasRing) {
-    ctx.strokeStyle = `hsla(${hue}, 70%, 80%, 0.5)`;
-    ctx.lineWidth = r * 0.14;
-    ctx.beginPath();
-    ctx.ellipse(x, y, r * 1.65, r * 0.42, -0.35, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
 // ---------- Shooting stars ----------
 const shootingStars = [];
 let shootTimer = 3;
@@ -469,13 +418,24 @@ function updateAndDrawShootingStars(dt) {
 }
 
 // ---------- Jet ----------
-const jet = { x: 0, y: 0, targetX: 0, vx: 0, w: 56, bank: 0 };
+const jet = { x: 0, y: 0, targetX: 0, targetY: 0, vx: 0, vy: 0, w: 56, bank: 0, pitch: 0 };
+
+function jetMargins() {
+  const s = jet.w / 64;
+  return {
+    x: jet.w * 0.55,
+    minY: 18 * K + jet.w * 0.45,
+    maxY: H - 30 * s - 14,
+    defaultY: H - jet.w * 1.7 - 14,
+  };
+}
 
 function drawJet(t, crashed) {
   const s = jet.w / 64; // designed at 64px half... full width 64 units
   ctx.save();
   ctx.translate(jet.x, jet.y + Math.sin(t * 2.2) * 2.5 * K); // gentle hover bob
   ctx.rotate(jet.bank * 0.30 + (crashed ? Math.sin(t * 9) * 0.25 : 0));
+  ctx.rotate(jet.pitch * 0.4);
   ctx.scale(s, s);
 
   // --- Engine flames (drawn first, behind body) ---
@@ -1583,7 +1543,9 @@ function startGame() {
   bossBarEl.classList.remove('visible');
   scoreSubEl.innerHTML = 'LEVEL 1 &nbsp;•&nbsp; ALIENS DODGED';
   jet.x = jet.targetX = W / 2;
+  jet.y = jet.targetY = jetMargins().defaultY;
   jet.bank = 0;
+  jet.pitch = 0;
   scoreEl.textContent = '0';
   menuEl.classList.add('hidden');
   overEl.classList.add('hidden');
@@ -1637,6 +1599,7 @@ function checkCollision() {
 // ---------- Input ----------
 let dragging = false;
 let lastPointerX = 0;
+let lastPointerY = 0;
 let overSince = 0;
 let downX = 0, downY = 0, downTime = 0;
 const DRAG_SENSITIVITY = 1.55;
@@ -1659,6 +1622,7 @@ window.addEventListener('pointerdown', (e) => {
   }
   dragging = true;
   lastPointerX = e.clientX;
+  lastPointerY = e.clientY;
   downX = e.clientX;
   downY = e.clientY;
   downTime = performance.now();
@@ -1666,16 +1630,21 @@ window.addEventListener('pointerdown', (e) => {
 
 window.addEventListener('pointermove', (e) => {
   if (state !== 'playing') return;
+  const m = jetMargins();
   if (e.pointerType === 'mouse') {
-    // Desktop: jet tracks the cursor, no button needed
-    jet.targetX = clamp(e.clientX, jet.w * 0.55, W - jet.w * 0.55);
+    // Desktop: jet tracks the cursor in both axes
+    jet.targetX = clamp(e.clientX, m.x, W - m.x);
+    jet.targetY = clamp(e.clientY, m.minY, m.maxY);
     return;
   }
   if (!dragging) return;
   e.preventDefault();
   const dx = e.clientX - lastPointerX;
+  const dy = e.clientY - lastPointerY;
   lastPointerX = e.clientX;
-  jet.targetX = clamp(jet.targetX + dx * DRAG_SENSITIVITY, jet.w * 0.55, W - jet.w * 0.55);
+  lastPointerY = e.clientY;
+  jet.targetX = clamp(jet.targetX + dx * DRAG_SENSITIVITY, m.x, W - m.x);
+  jet.targetY = clamp(jet.targetY + dy * DRAG_SENSITIVITY, m.minY, m.maxY);
 }, { passive: false });
 
 window.addEventListener('pointerup', (e) => {
@@ -1724,14 +1693,21 @@ function frame(now) {
     difficulty = Math.min(1, elapsed / 90);
 
     // Keyboard steering
-    const kv = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
-    if (kv) jet.targetX = clamp(jet.targetX + kv * 640 * K * dt, jet.w * 0.55, W - jet.w * 0.55);
+    const m = jetMargins();
+    const kh = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
+    const kv = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0);
+    if (kh) jet.targetX = clamp(jet.targetX + kh * 640 * K * dt, m.x, W - m.x);
+    if (kv) jet.targetY = clamp(jet.targetY + kv * 640 * K * dt, m.minY, m.maxY);
 
     // Jet eases toward target
     const prevX = jet.x;
+    const prevY = jet.y;
     jet.x += (jet.targetX - jet.x) * Math.min(1, dt * 14);
+    jet.y += (jet.targetY - jet.y) * Math.min(1, dt * 14);
     jet.vx = (jet.x - prevX) / Math.max(dt, 0.001);
+    jet.vy = (jet.y - prevY) / Math.max(dt, 0.001);
     jet.bank += (clamp(jet.vx / 900, -1, 1) - jet.bank) * Math.min(1, dt * 10);
+    jet.pitch += (clamp(jet.vy / 700, -0.6, 0.6) - jet.pitch) * Math.min(1, dt * 10);
 
     // Spawn aliens (sparser during the boss fight, but still there to earn ammo)
     spawnTimer -= dt;
@@ -1755,6 +1731,7 @@ function frame(now) {
   } else if (state === 'over') {
     crashTime += dt;
     jet.bank *= 0.98;
+    jet.pitch *= 0.98;
     // Aliens drift on gently behind the game-over screen
     for (const a of aliens) a.y += a.speed * 0.25 * dt;
     // In-flight bullets keep going (no collisions after the bonk)
@@ -1771,7 +1748,6 @@ function frame(now) {
 
   // -- Draw --
   ctx.drawImage(bgCanvas, 0, 0, W, H);
-  updateAndDrawPlanet(dt, starSpeed);
   updateAndDrawStars(dt, t, starSpeed);
   updateAndDrawShootingStars(dt);
   updateAndDrawExhaust(dt);
