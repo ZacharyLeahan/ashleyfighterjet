@@ -42,6 +42,17 @@ on the phone — no port forwarding or deployment needed.
 - Each alien that flies past you = **+1 point and +1 bullet**
 - Shooting an alien = **+1 point** — one hit destroys it, and the bullet stops on impact
 - Out of bullets? You'll hear a dull click — dodge some aliens to reload
+
+## Boss fights
+
+- Dodge **30 aliens** and a giant crowned boss alien flies in and hovers at the top,
+  sweeping side to side and firing glowing orbs at you — dodge them!
+- Hit the boss **10 times** to defeat him (your ammo tops up to at least 10 when he
+  arrives, and small aliens keep trickling in so you can dodge to earn more)
+- At **7 hits** he starts fuming smoke and gets angrier — faster, multi-shot attacks
+- Defeating a boss = **+10 points** and the next level starts, with everything a
+  little faster
+- Defeat **3 bosses** to win the game! 🏆
 - Aliens get faster and more frequent the longer you survive
 - Best score is saved on the device (localStorage)
 - Touch an alien and you get "bonked" — tap to fly again
