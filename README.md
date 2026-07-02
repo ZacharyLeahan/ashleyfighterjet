@@ -1,8 +1,8 @@
 # Ashley's Fighter Jet 🛸
 
-A kid-friendly, portrait-mode mobile dodge game. Steer a fighter jet left and right
-with your thumb to dodge cute aliens descending from the top of the screen.
-No shooting, no power-ups — just dodging (for now).
+A kid-friendly, portrait-mode mobile game. Steer a fighter jet left and right
+with your thumb to dodge cute aliens descending from the top of the screen,
+and tap to shoot them down.
 
 Everything lives in a single `index.html` — vanilla HTML5 Canvas, zero dependencies,
 no build step.
@@ -28,12 +28,14 @@ The server binds to all interfaces on port 8000, so any device on your tailnet c
 
 ## Controls
 
-- **Mobile:** press and drag your thumb anywhere on the screen — the jet follows left/right
-- **Desktop:** ← / → arrow keys (or A/D), Space/Enter to start
+- **Mobile:** press and drag your thumb anywhere on the screen — the jet follows left/right.
+  Quick **tap** (without dragging) to fire a bullet — tap 3 times for 3 bullets.
+- **Desktop:** ← / → arrow keys (or A/D) to steer, Space/Enter to shoot (and to start)
 
 ## Gameplay
 
 - Each alien that flies past you = **+1 point**
+- Shooting an alien = **+1 point** — one hit destroys it, and the bullet stops on impact
 - Aliens get faster and more frequent the longer you survive
 - Best score is saved on the device (localStorage)
 - Touch an alien and you get "bonked" — tap to fly again

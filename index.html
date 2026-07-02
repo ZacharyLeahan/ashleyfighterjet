@@ -157,7 +157,7 @@
   <div class="emoji-row">🛸 👾 🛸</div>
   <div class="title">Ashley's<br>Fighter Jet</div>
   <div class="subtitle">Dodge the silly aliens!</div>
-  <div class="hint">Slide your thumb left &amp; right to steer</div>
+  <div class="hint">Slide your thumb to steer &nbsp;•&nbsp; Tap to shoot!</div>
   <div class="swipe-hand">👆</div>
   <div class="tap-label">TAP TO FLY</div>
 </div>
@@ -717,6 +717,115 @@ function updateAndDrawPopups(dt) {
   }
 }
 
+// ---------- Bullets ----------
+const bullets = [];
+function fireBullet() {
+  if (state !== 'playing') return;
+  const s = jet.w / 64;
+  bullets.push({ x: jet.x, y: jet.y - 36 * s, vy: -980 * K });
+}
+
+function updateBullets(dt) {
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.y += b.vy * dt;
+    if (b.y < -30) { bullets.splice(i, 1); continue; }
+    for (let j = aliens.length - 1; j >= 0; j--) {
+      const a = aliens[j];
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const rr = a.r * 0.9 + 6 * K;
+      if (dx * dx + dy * dy < rr * rr) {
+        spawnBurst(a.x, a.y, a.r, a.palette);
+        aliens.splice(j, 1);
+        bullets.splice(i, 1);
+        score++;
+        scoreEl.textContent = score;
+        spawnPopup(a.x, a.y);
+        break;
+      }
+    }
+  }
+}
+
+function drawBullets() {
+  if (!bullets.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const b of bullets) {
+    // Trailing streak
+    const trail = 26 * K;
+    const g = ctx.createLinearGradient(b.x, b.y + trail, b.x, b.y);
+    g.addColorStop(0, 'rgba(255,160,60,0)');
+    g.addColorStop(1, 'rgba(255,220,120,0.9)');
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 5 * K;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y + trail);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    // Glowing head
+    const hg = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 9 * K);
+    hg.addColorStop(0, 'rgba(255,255,255,0.95)');
+    hg.addColorStop(0.4, 'rgba(255,230,110,0.8)');
+    hg.addColorStop(1, 'rgba(255,180,60,0)');
+    ctx.fillStyle = hg;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 9 * K, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ---------- Pop bursts (alien defeat effect) ----------
+const bursts = [];
+function spawnBurst(x, y, r, p) {
+  bursts.push({ type: 'ring', x, y, r: r * 0.5, maxR: r * 2.2, life: 0.35, maxLife: 0.35, color: p.light });
+  const n = 14;
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * Math.PI * 2 + rand(-0.3, 0.3);
+    const sp = rand(70, 240) * K * (r / 26);
+    bursts.push({
+      type: 'dot', x, y,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+      r: rand(2, 5) * Math.max(K, 0.8),
+      life: rand(0.35, 0.65), maxLife: 0.65,
+      color: pick([p.light, p.main, '#fff8b8', '#ffffff']),
+    });
+  }
+}
+
+function updateAndDrawBursts(dt) {
+  if (!bursts.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const p = bursts[i];
+    p.life -= dt;
+    if (p.life <= 0) { bursts.splice(i, 1); continue; }
+    const a = p.life / p.maxLife;
+    ctx.globalAlpha = a;
+    if (p.type === 'ring') {
+      const rr = p.r + (1 - a) * (p.maxR - p.r);
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 3 * K * a + 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rr, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.vx *= (1 - 2.4 * dt); p.vy *= (1 - 2.4 * dt);
+      p.vy += 40 * K * dt;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * (0.4 + 0.6 * a), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 // ---------- Game state ----------
 let state = 'menu'; // 'menu' | 'playing' | 'over'
 let score = 0;
@@ -730,6 +839,8 @@ function startGame() {
   aliens.length = 0;
   popups.length = 0;
   exhaust.length = 0;
+  bullets.length = 0;
+  bursts.length = 0;
   score = 0;
   elapsed = 0;
   difficulty = 0;
@@ -773,7 +884,10 @@ function checkCollision() {
 let dragging = false;
 let lastPointerX = 0;
 let overSince = 0;
+let downX = 0, downY = 0, downTime = 0;
 const DRAG_SENSITIVITY = 1.55;
+const TAP_MAX_DIST = 14;   // px of finger travel before a press counts as a drag
+const TAP_MAX_MS = 280;    // press longer than this = steering, not shooting
 
 window.addEventListener('pointerdown', (e) => {
   e.preventDefault();
@@ -785,6 +899,9 @@ window.addEventListener('pointerdown', (e) => {
   }
   dragging = true;
   lastPointerX = e.clientX;
+  downX = e.clientX;
+  downY = e.clientY;
+  downTime = performance.now();
 }, { passive: false });
 
 window.addEventListener('pointermove', (e) => {
@@ -795,7 +912,13 @@ window.addEventListener('pointermove', (e) => {
   jet.targetX = clamp(jet.targetX + dx * DRAG_SENSITIVITY, jet.w * 0.55, W - jet.w * 0.55);
 }, { passive: false });
 
-window.addEventListener('pointerup', () => { dragging = false; });
+window.addEventListener('pointerup', (e) => {
+  if (dragging && state === 'playing') {
+    const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
+    if (dist < TAP_MAX_DIST && performance.now() - downTime < TAP_MAX_MS) fireBullet();
+  }
+  dragging = false;
+});
 window.addEventListener('pointercancel', () => { dragging = false; });
 
 // Keyboard (desktop testing)
@@ -805,6 +928,7 @@ window.addEventListener('keydown', (e) => {
   if ((e.key === ' ' || e.key === 'Enter')) {
     if (state === 'menu') startGame();
     else if (state === 'over' && performance.now() - overSince > 900) startGame();
+    else if (state === 'playing') fireBullet();
   }
 });
 window.addEventListener('keyup', (e) => { keys[e.key] = false; });
@@ -850,6 +974,7 @@ function frame(now) {
     }
 
     updateAliens(dt);
+    updateBullets(dt);
     spawnExhaust(dt);
 
     if (checkCollision()) {
@@ -861,6 +986,11 @@ function frame(now) {
     jet.bank *= 0.98;
     // Aliens drift on gently behind the game-over screen
     for (const a of aliens) a.y += a.speed * 0.25 * dt;
+    // In-flight bullets keep going (no collisions after the bonk)
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      bullets[i].y += bullets[i].vy * dt;
+      if (bullets[i].y < -30) bullets.splice(i, 1);
+    }
   }
 
   // -- Draw --
@@ -870,6 +1000,8 @@ function frame(now) {
   updateAndDrawShootingStars(dt);
   updateAndDrawExhaust(dt);
   for (const a of aliens) drawAlien(a, t);
+  drawBullets();
+  updateAndDrawBursts(dt);
   if (state !== 'menu') drawJet(t, state === 'over');
   updateAndDrawPopups(dt);
   ctx.drawImage(vignetteCanvas, 0, 0, W, H);
