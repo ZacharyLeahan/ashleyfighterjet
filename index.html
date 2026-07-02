@@ -143,6 +143,21 @@
     color: #9db8e8;
     text-shadow: 0 2px 5px rgba(0,0,0,0.7);
   }
+  #ammo {
+    position: absolute;
+    left: 14px; top: 4px;
+    font-size: clamp(19px, 5.5vw, 27px);
+    font-weight: 900;
+    color: #ffd76e;
+    text-shadow: 0 0 12px rgba(255, 190, 80, 0.6), 0 2px 6px rgba(0,0,0,0.6);
+  }
+  #ammo.low { color: #ff8484; text-shadow: 0 0 12px rgba(255, 90, 90, 0.7), 0 2px 6px rgba(0,0,0,0.6); }
+  #ammo.bump { animation: ammoBump 0.25s ease; }
+  @keyframes ammoBump {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
   #mute-btn {
     position: fixed;
     top: calc(12px + env(safe-area-inset-top));
@@ -167,6 +182,7 @@
 <button id="mute-btn" aria-label="Toggle sound">🔊</button>
 
 <div id="hud">
+  <div id="ammo">🔸 10</div>
   <div id="score">0</div>
   <div id="score-sub">ALIENS DODGED</div>
 </div>
@@ -176,6 +192,7 @@
   <div class="title">Ashley's<br>Fighter Jet</div>
   <div class="subtitle">Dodge the silly aliens!</div>
   <div class="hint">Slide your thumb to steer &nbsp;•&nbsp; Tap to shoot!</div>
+  <div class="hint" style="opacity:0.8; font-size:0.85em">You start with 10 bullets — dodge aliens to earn more! 🔸</div>
   <div class="swipe-hand">👆</div>
   <div class="tap-label">TAP TO FLY</div>
 </div>
@@ -598,6 +615,7 @@ function updateAliens(dt) {
       score++;
       scoreEl.textContent = score;
       spawnPopup(a.x, H - 60 * K);
+      setAmmo(ammo + 1, true); // dodging earns a bullet back
     }
   }
 }
@@ -735,10 +753,31 @@ function updateAndDrawPopups(dt) {
   }
 }
 
-// ---------- Bullets ----------
+// ---------- Bullets & ammo ----------
 const bullets = [];
+const START_AMMO = 10;
+let ammo = START_AMMO;
+const ammoEl = document.getElementById('ammo');
+
+function setAmmo(n, bump) {
+  ammo = n;
+  ammoEl.textContent = '🔸 ' + ammo;
+  ammoEl.classList.toggle('low', ammo <= 3);
+  if (bump) {
+    ammoEl.classList.remove('bump');
+    void ammoEl.offsetWidth; // restart the animation
+    ammoEl.classList.add('bump');
+  }
+}
+
 function fireBullet() {
   if (state !== 'playing') return;
+  if (ammo <= 0) {
+    sfxEmpty();
+    setAmmo(0, true); // shake the counter so it's clear why nothing fired
+    return;
+  }
+  setAmmo(ammo - 1);
   const s = jet.w / 64;
   bullets.push({ x: jet.x, y: jet.y - 36 * s, vy: -980 * K });
   sfxShoot();
@@ -1002,6 +1041,20 @@ function sfxPop() {
   src.start(t); src.stop(t + 0.13);
 }
 
+function sfxEmpty() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  const o = AC.createOscillator();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(140, t);
+  o.frequency.exponentialRampToValueAtTime(90, t + 0.08);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.12, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+  o.connect(g); g.connect(sfxGain);
+  o.start(t); o.stop(t + 0.1);
+}
+
 function sfxCrash() {
   if (!AC) return;
   const t = AC.currentTime;
@@ -1080,6 +1133,7 @@ function startGame() {
   elapsed = 0;
   difficulty = 0;
   spawnTimer = 1.0;
+  setAmmo(START_AMMO);
   jet.x = jet.targetX = W / 2;
   jet.bank = 0;
   scoreEl.textContent = '0';

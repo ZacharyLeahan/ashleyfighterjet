@@ -35,8 +35,10 @@ The server binds to all interfaces on port 8000, so any device on your tailnet c
 
 ## Gameplay
 
-- Each alien that flies past you = **+1 point**
+- You start with **10 bullets**; shooting costs one
+- Each alien that flies past you = **+1 point and +1 bullet**
 - Shooting an alien = **+1 point** — one hit destroys it, and the bullet stops on impact
+- Out of bullets? You'll hear a dull click — dodge some aliens to reload
 - Aliens get faster and more frequent the longer you survive
 - Best score is saved on the device (localStorage)
 - Touch an alien and you get "bonked" — tap to fly again
