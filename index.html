@@ -38,7 +38,8 @@
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     transition: opacity 0.35s ease;
-    z-index: 10;
+    z-index: 30;
+    pointer-events: auto;
   }
   .overlay.hidden { opacity: 0; pointer-events: none; }
   .title {
@@ -83,9 +84,42 @@
     letter-spacing: 3px;
     padding: 14px 34px;
     border-radius: 999px;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    touch-action: manipulation;
     background: linear-gradient(180deg, #4f8cff, #2f5fe0);
     box-shadow: 0 6px 22px rgba(63, 110, 255, 0.55), inset 0 2px 0 rgba(255,255,255,0.35);
     animation: pulse 1.5s ease-in-out infinite;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .difficulty-picker {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 14px 0 18px;
+  }
+  .difficulty-btn {
+    min-width: 82px;
+    padding: 9px 12px;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    color: #eaf2ff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .difficulty-btn.selected {
+    color: #10234a;
+    border-color: rgba(255, 255, 255, 0.75);
+    background: linear-gradient(180deg, #fff1a8, #6be4ff);
+    box-shadow: 0 4px 16px rgba(100, 210, 255, 0.38);
   }
   @keyframes pulse {
     0%, 100% { transform: scale(1); }
@@ -199,12 +233,221 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
+  .overlay-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .shop-open-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(180deg, #7b4dff, #5a2fd4);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px rgba(110, 70, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+    font-family: inherit;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #shop-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 34;
+    background: rgba(4, 4, 20, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: opacity 0.3s ease;
+  }
+  #shop-backdrop.hidden { opacity: 0; pointer-events: none; }
+  #shop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 35;
+    width: min(300px, 88vw);
+    padding: calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(18, 16, 48, 0.97), rgba(10, 10, 32, 0.98));
+    box-shadow: 6px 0 28px rgba(0, 0, 0, 0.55);
+    transform: translateX(-105%);
+    transition: transform 0.32s ease, visibility 0s linear 0.32s;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  #shop.open {
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+    transition: transform 0.32s ease, visibility 0s;
+  }
+  #shop-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  #shop-title {
+    font-size: clamp(24px, 6vw, 30px);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 10px rgba(140, 100, 255, 0.5);
+  }
+  #shop-close {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #shop-points {
+    color: #ffe36e;
+    font-size: clamp(16px, 4.2vw, 19px);
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 8px rgba(255, 200, 60, 0.35);
+  }
+  #shop-hint {
+    color: #9db8e8;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 18px;
+  }
+  #shop-colors {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .shop-section-title {
+    color: #ffe36e;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    margin: 14px 0 8px;
+    text-align: left;
+    text-transform: uppercase;
+  }
+  .shop-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .shop-item.equipped {
+    background: rgba(120, 90, 255, 0.22);
+    box-shadow: 0 0 0 2px rgba(180, 140, 255, 0.55);
+  }
+  .shop-swatch {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  }
+  .shop-swatch.locked {
+    filter: grayscale(0.85) brightness(0.55);
+    opacity: 0.75;
+  }
+  .shop-swatch.weapon {
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 35% 30%, #fff6b8, #ff9f45 50%, #a83cff);
+    color: #fff;
+    font-size: 24px;
+    filter: none;
+  }
+  .shop-item-info {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+  .shop-item-name {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  .shop-item-status {
+    color: #9db8e8;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .shop-item-btn {
+    flex-shrink: 0;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    touch-action: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .shop-item-btn.equip {
+    background: linear-gradient(180deg, #5ce0a0, #2cb56e);
+    color: #063;
+  }
+  .shop-item-btn.unlock {
+    background: linear-gradient(180deg, #ffd76e, #f0a830);
+    color: #532;
+  }
+  .shop-item-btn.unlock:disabled {
+    background: rgba(255, 255, 255, 0.12);
+    color: #7a8aaa;
+    cursor: default;
+  }
+  .shop-item-btn.equipped-label {
+    background: rgba(255, 255, 255, 0.14);
+    color: #d8c8ff;
+    cursor: default;
+  }
+  .points-earned {
+    color: #ffe36e;
+    font-weight: 800;
+    font-size: clamp(14px, 4vw, 17px);
+    margin-bottom: 12px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 
 <button id="mute-btn" aria-label="Toggle sound">🔊</button>
+<div id="shop-backdrop" class="hidden"></div>
+<aside id="shop" aria-label="Shop">
+  <div id="shop-header">
+    <div id="shop-title">Shop</div>
+    <button id="shop-close" type="button" aria-label="Close shop">×</button>
+  </div>
+  <div id="shop-points">⭐ 0 points</div>
+  <div id="shop-hint">Earn points by playing! Buy boss helpers or unlock new jet colors.</div>
+  <div id="shop-colors"></div>
+</aside>
 
 <div id="hud">
   <div id="ammo">🔸 10</div>
@@ -222,8 +465,17 @@
   <div class="subtitle">Dodge the silly aliens!</div>
   <div class="hint">Slide your thumb to steer &nbsp;•&nbsp; Tap to shoot!</div>
   <div class="hint" style="opacity:0.8; font-size:0.85em">You start with 10 bullets — dodge aliens to earn more! 🔸</div>
+  <div class="hint" style="margin-top:10px; opacity:0.85; font-size:0.85em">Open the Shop for boss bombs, stronger guns, and jet colors!</div>
+  <div class="difficulty-picker" aria-label="Choose difficulty">
+    <button type="button" class="difficulty-btn" data-difficulty="easy">EASY</button>
+    <button type="button" class="difficulty-btn selected" data-difficulty="medium">MEDIUM</button>
+    <button type="button" class="difficulty-btn" data-difficulty="hard">HARD</button>
+  </div>
   <div class="swipe-hand">👆</div>
-  <div class="tap-label">TAP TO FLY</div>
+  <div class="overlay-actions">
+    <button type="button" class="tap-label" id="start-btn">TAP TO FLY</button>
+    <button type="button" class="shop-open-btn" aria-label="Open shop">🛒 Shop</button>
+  </div>
 </div>
 
 <div id="win" class="overlay hidden">
@@ -232,17 +484,25 @@
   <div class="subtitle">All 3 bosses defeated — the galaxy is safe!</div>
   <div class="big-score" id="win-score">0</div>
   <div class="score-label">FINAL SCORE</div>
+  <div id="win-points-earned" class="points-earned" style="display:none"></div>
   <div id="win-best-badge" class="new-best" style="display:none">🌟 NEW BEST! 🌟</div>
-  <div class="tap-label">TAP TO PLAY AGAIN</div>
+  <div class="overlay-actions">
+    <button type="button" class="tap-label" id="win-restart-btn">TAP TO PLAY AGAIN</button>
+    <button type="button" class="shop-open-btn" aria-label="Open shop">🛒 Shop</button>
+  </div>
 </div>
 
 <div id="gameover" class="overlay hidden">
   <div class="subtitle" style="margin-bottom:10px">Oof! You got bonked! 💫</div>
   <div class="big-score" id="final-score">0</div>
   <div class="score-label">ALIENS DODGED</div>
+  <div id="points-earned-line" class="points-earned" style="display:none"></div>
   <div id="new-best-badge" class="new-best" style="display:none">🌟 NEW BEST! 🌟</div>
   <div class="best-line" id="best-line">Best: 0</div>
-  <div class="tap-label">TAP TO FLY AGAIN</div>
+  <div class="overlay-actions">
+    <button type="button" class="tap-label" id="over-restart-btn">TAP TO FLY AGAIN</button>
+    <button type="button" class="shop-open-btn" aria-label="Open shop">🛒 Shop</button>
+  </div>
 </div>
 
 <script>
@@ -418,6 +678,119 @@ function updateAndDrawShootingStars(dt) {
 }
 
 // ---------- Jet ----------
+const COLOR_UNLOCK_COST = 70;
+const JET_COLORS = [
+  { id: 'blue', name: 'Blue', hue: 214, swatch: '#5b9cff', cost: 0 },
+  { id: 'red', name: 'Red', hue: 355, swatch: '#ff5a6a', cost: COLOR_UNLOCK_COST },
+  { id: 'orange', name: 'Orange', hue: 24, swatch: '#ff9a45', cost: COLOR_UNLOCK_COST },
+  { id: 'yellow', name: 'Yellow', hue: 48, swatch: '#ffd84a', cost: COLOR_UNLOCK_COST },
+  { id: 'green', name: 'Green', hue: 135, swatch: '#4ede8a', cost: COLOR_UNLOCK_COST },
+  { id: 'purple', name: 'Purple', hue: 272, swatch: '#a96bff', cost: COLOR_UNLOCK_COST },
+  { id: 'pink', name: 'Pink', hue: 322, swatch: '#ff6eb8', cost: COLOR_UNLOCK_COST },
+];
+const SHOP_WEAPONS = [
+  { id: 'gun', name: 'Twin Guns', icon: '🔫', cost: 40, maxLevel: 1 },
+  { id: 'bomb', name: 'Boss Bombs', icon: '💣', cost: 55, maxLevel: 2 },
+];
+let jetColorId = 'blue';
+let shopPoints = 0;
+let unlockedColors = ['blue'];
+let weaponUpgrades = { gun: 0, bomb: 0 };
+let shopOpen = false;
+
+try { jetColorId = localStorage.getItem('ashleyJetColor') || 'blue'; } catch (e) {}
+try { shopPoints = parseInt(localStorage.getItem('ashleyJetPoints') || '0', 10) || 0; } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem('ashleyJetUnlocked') || '["blue"]');
+  if (Array.isArray(saved) && saved.length) unlockedColors = saved;
+} catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem('ashleyJetWeapons') || '{}');
+  if (saved && typeof saved === 'object') {
+    weaponUpgrades.gun = clamp(parseInt(saved.gun || '0', 10) || 0, 0, 1);
+    weaponUpgrades.bomb = clamp(parseInt(saved.bomb || '0', 10) || 0, 0, 2);
+  }
+} catch (e) {}
+unlockedColors = unlockedColors.filter((id) => JET_COLORS.some((c) => c.id === id));
+for (const c of JET_COLORS) {
+  if (c.cost === 0 && !unlockedColors.includes(c.id)) unlockedColors.push(c.id);
+}
+if (!JET_COLORS.some((c) => c.id === jetColorId)) jetColorId = 'blue';
+if (!unlockedColors.includes('blue')) unlockedColors.unshift('blue');
+if (!unlockedColors.includes(jetColorId)) jetColorId = 'blue';
+
+function isColorUnlocked(id) {
+  return unlockedColors.includes(id);
+}
+
+function saveShopState() {
+  try {
+    localStorage.setItem('ashleyJetColor', jetColorId);
+    localStorage.setItem('ashleyJetPoints', String(shopPoints));
+    localStorage.setItem('ashleyJetUnlocked', JSON.stringify(unlockedColors));
+    localStorage.setItem('ashleyJetWeapons', JSON.stringify(weaponUpgrades));
+  } catch (err) {}
+}
+
+function bankRunPoints(earned) {
+  if (earned <= 0) return 0;
+  shopPoints += earned;
+  saveShopState();
+  updateShopUI();
+  return earned;
+}
+
+function unlockColor(id) {
+  const color = JET_COLORS.find((c) => c.id === id);
+  if (!color || isColorUnlocked(id) || shopPoints < color.cost) return false;
+  shopPoints -= color.cost;
+  unlockedColors.push(id);
+  jetColorId = id;
+  saveShopState();
+  updateShopUI();
+  return true;
+}
+
+function equipColor(id) {
+  if (!isColorUnlocked(id)) return;
+  jetColorId = id;
+  saveShopState();
+  updateShopUI();
+}
+
+function weaponLevel(id) {
+  const weapon = SHOP_WEAPONS.find((w) => w.id === id);
+  return clamp(weaponUpgrades[id] || 0, 0, weapon ? weapon.maxLevel : 0);
+}
+
+function buyWeapon(id) {
+  const weapon = SHOP_WEAPONS.find((w) => w.id === id);
+  if (!weapon || weaponLevel(id) >= weapon.maxLevel || shopPoints < weapon.cost) return false;
+  shopPoints -= weapon.cost;
+  weaponUpgrades[id] = weaponLevel(id) + 1;
+  saveShopState();
+  updateShopUI();
+  return true;
+}
+
+function jetPaint(hue) {
+  return {
+    wingLight: `hsl(${hue}, 48%, 66%)`,
+    wingDark: `hsl(${hue}, 52%, 36%)`,
+    tail: `hsl(${hue}, 46%, 28%)`,
+    bodyEdge: `hsl(${hue}, 44%, 46%)`,
+    bodyMid: `hsl(${hue}, 58%, 80%)`,
+    tip: `hsl(${(hue + 180) % 360}, 75%, 58%)`,
+    nose: `hsl(${(hue + 30) % 360}, 88%, 62%)`,
+  };
+}
+
+function getJetPaint() {
+  const id = isColorUnlocked(jetColorId) ? jetColorId : 'blue';
+  const opt = JET_COLORS.find((c) => c.id === id) || JET_COLORS.find((c) => c.id === 'blue');
+  return jetPaint(opt.hue);
+}
+
 const jet = { x: 0, y: 0, targetX: 0, targetY: 0, vx: 0, vy: 0, w: 56, bank: 0, pitch: 0 };
 
 function jetMargins() {
@@ -432,6 +805,7 @@ function jetMargins() {
 
 function drawJet(t, crashed) {
   const s = jet.w / 64; // designed at 64px half... full width 64 units
+  const paint = getJetPaint();
   ctx.save();
   ctx.translate(jet.x, jet.y + Math.sin(t * 2.2) * 2.5 * K); // gentle hover bob
   ctx.rotate(jet.bank * 0.30 + (crashed ? Math.sin(t * 9) * 0.25 : 0));
@@ -463,8 +837,8 @@ function drawJet(t, crashed) {
 
   // --- Wings (swept delta) ---
   const wingG = ctx.createLinearGradient(0, -10, 0, 26);
-  wingG.addColorStop(0, '#7fa8d8');
-  wingG.addColorStop(1, '#3d5f95');
+  wingG.addColorStop(0, paint.wingLight);
+  wingG.addColorStop(1, paint.wingDark);
   ctx.fillStyle = wingG;
   ctx.beginPath();
   ctx.moveTo(0, -12);
@@ -473,20 +847,20 @@ function drawJet(t, crashed) {
   ctx.closePath();
   ctx.fill();
   // Wing tips (accent)
-  ctx.fillStyle = '#ff6b6b';
+  ctx.fillStyle = paint.tip;
   ctx.beginPath(); ctx.moveTo(-32, 22); ctx.lineTo(-30, 28); ctx.lineTo(-24, 26.6); ctx.lineTo(-26.5, 20.5); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(32, 22); ctx.lineTo(30, 28); ctx.lineTo(24, 26.6); ctx.lineTo(26.5, 20.5); ctx.closePath(); ctx.fill();
 
   // --- Tail fins ---
-  ctx.fillStyle = '#33507e';
+  ctx.fillStyle = paint.tail;
   ctx.beginPath(); ctx.moveTo(-6, 18); ctx.lineTo(-15, 32); ctx.lineTo(-5, 30); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(6, 18); ctx.lineTo(15, 32); ctx.lineTo(5, 30); ctx.closePath(); ctx.fill();
 
   // --- Fuselage ---
   const bodyG = ctx.createLinearGradient(-12, 0, 12, 0);
-  bodyG.addColorStop(0, '#5b81b8');
-  bodyG.addColorStop(0.5, '#c8ddf5');
-  bodyG.addColorStop(1, '#5b81b8');
+  bodyG.addColorStop(0, paint.bodyEdge);
+  bodyG.addColorStop(0.5, paint.bodyMid);
+  bodyG.addColorStop(1, paint.bodyEdge);
   ctx.fillStyle = bodyG;
   ctx.beginPath();
   ctx.moveTo(0, -34);                       // nose tip
@@ -499,7 +873,7 @@ function drawJet(t, crashed) {
   ctx.fill();
 
   // Nose cone accent
-  ctx.fillStyle = '#ffb84d';
+  ctx.fillStyle = paint.nose;
   ctx.beginPath();
   ctx.moveTo(0, -34);
   ctx.quadraticCurveTo(5.5, -24, 6.2, -18);
@@ -620,7 +994,7 @@ function updateAliens(dt) {
       spawnPopup(a.x, H - 60 * K);
       setAmmo(ammo + 1, true); // dodging earns a bullet back
       dodgesThisLevel++;
-      if (phase === 'normal' && dodgesThisLevel >= BOSS_AT) startBossFight();
+      if (phase === 'normal' && dodgesThisLevel >= bossTargetDodges()) startBossFight();
     }
   }
 }
@@ -761,7 +1135,11 @@ function updateAndDrawPopups(dt) {
 // ---------- Bullets & ammo ----------
 const bullets = [];
 const START_AMMO = 10;
+const SHOT_COOLDOWN_MS = 240;
+const BOSS_SHOT_COOLDOWN_MS = 320;
 let ammo = START_AMMO;
+let shotsFired = 0;
+let lastShotAt = -Infinity;
 const ammoEl = document.getElementById('ammo');
 
 function setAmmo(n, bump) {
@@ -782,23 +1160,46 @@ function fireBullet() {
     setAmmo(0, true); // shake the counter so it's clear why nothing fired
     return;
   }
+  const now = performance.now();
+  const cooldown = phase === 'boss' ? BOSS_SHOT_COOLDOWN_MS : SHOT_COOLDOWN_MS;
+  if (now - lastShotAt < cooldown) return;
+  lastShotAt = now;
   setAmmo(ammo - 1);
   const s = jet.w / 64;
-  bullets.push({ x: jet.x, y: jet.y - 36 * s, vy: -980 * K });
+  shotsFired++;
+  const gunLevel = weaponLevel('gun');
+  const bombLevel = weaponLevel('bomb');
+  const bombEvery = bombLevel === 0 ? 0 : (bombLevel === 1 ? 5 : 3);
+  const bombShot = bombEvery > 0 && shotsFired % bombEvery === 0;
+  const pattern = gunLevel === 0 ? [0] : [-10, 10];
+  const bombIndex = Math.floor(pattern.length / 2);
+  for (let i = 0; i < pattern.length; i++) {
+    const offset = pattern[i];
+    const isBomb = bombShot && i === bombIndex;
+    bullets.push({
+      x: jet.x + offset * K,
+      y: jet.y - 36 * s,
+      vx: offset * 1.6 * K,
+      vy: isBomb ? -760 * K : -980 * K,
+      type: isBomb ? 'bomb' : 'bullet',
+      damage: isBomb ? (bombLevel === 2 ? 4 : 3) : 1,
+    });
+  }
   sfxShoot();
 }
 
 function updateBullets(dt) {
   for (let i = bullets.length - 1; i >= 0; i--) {
     const b = bullets[i];
+    b.x += (b.vx || 0) * dt;
     b.y += b.vy * dt;
-    if (b.y < -30) { bullets.splice(i, 1); continue; }
+    if (b.y < -40 || b.x < -40 || b.x > W + 40) { bullets.splice(i, 1); continue; }
     if (boss.active) {
       const bdx = boss.x - b.x, bdy = boss.y - b.y;
       const br = boss.r * 0.82;
       if (bdx * bdx + bdy * bdy < br * br) {
         bullets.splice(i, 1);
-        hitBoss(b.x, b.y);
+        hitBoss(b.x, b.y, b.damage || 1, b.type === 'bomb');
         continue;
       }
     }
@@ -808,6 +1209,7 @@ function updateBullets(dt) {
       const rr = a.r * 0.9 + 6 * K;
       if (dx * dx + dy * dy < rr * rr) {
         spawnBurst(a.x, a.y, a.r, a.palette);
+        if (b.type === 'bomb') spawnBurst(a.x, a.y, a.r * 1.5, bossPalette());
         aliens.splice(j, 1);
         bullets.splice(i, 1);
         score++;
@@ -826,25 +1228,27 @@ function drawBullets() {
   ctx.globalCompositeOperation = 'lighter';
   for (const b of bullets) {
     // Trailing streak
-    const trail = 26 * K;
+    const isBomb = b.type === 'bomb';
+    const trail = (isBomb ? 18 : 26) * K;
     const g = ctx.createLinearGradient(b.x, b.y + trail, b.x, b.y);
-    g.addColorStop(0, 'rgba(255,160,60,0)');
-    g.addColorStop(1, 'rgba(255,220,120,0.9)');
+    g.addColorStop(0, isBomb ? 'rgba(255,60,120,0)' : 'rgba(255,160,60,0)');
+    g.addColorStop(1, isBomb ? 'rgba(255,90,160,0.95)' : 'rgba(255,220,120,0.9)');
     ctx.strokeStyle = g;
-    ctx.lineWidth = 5 * K;
+    ctx.lineWidth = (isBomb ? 8 : 5) * K;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(b.x, b.y + trail);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
     // Glowing head
-    const hg = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 9 * K);
+    const head = (isBomb ? 14 : 9) * K;
+    const hg = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, head);
     hg.addColorStop(0, 'rgba(255,255,255,0.95)');
-    hg.addColorStop(0.4, 'rgba(255,230,110,0.8)');
-    hg.addColorStop(1, 'rgba(255,180,60,0)');
+    hg.addColorStop(0.4, isBomb ? 'rgba(255,70,120,0.85)' : 'rgba(255,230,110,0.8)');
+    hg.addColorStop(1, isBomb ? 'rgba(180,60,255,0)' : 'rgba(255,180,60,0)');
     ctx.fillStyle = hg;
     ctx.beginPath();
-    ctx.arc(b.x, b.y, 9 * K, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y, head, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -902,20 +1306,78 @@ function updateAndDrawBursts(dt) {
 // ---------- Levels & boss ----------
 const MAX_LEVEL = 3;
 const BOSS_AT = 30;          // dodges (not kills) needed to summon the boss
+const DIFFICULTY_SETTINGS = [
+  { id: 'easy', label: 'EASY', speedMul: 0.82, spawnMul: 1.32, bossAtMul: 0.85, bossHpMul: 0.82, bossFireMul: 1.25 },
+  { id: 'medium', label: 'MEDIUM', speedMul: 1, spawnMul: 1, bossAtMul: 1, bossHpMul: 1, bossFireMul: 1 },
+  { id: 'hard', label: 'HARD', speedMul: 1.18, spawnMul: 0.78, bossAtMul: 1.12, bossHpMul: 1.2, bossFireMul: 0.82 },
+];
+let selectedDifficultyId = 'medium';
+try {
+  const savedDifficulty = localStorage.getItem('ashleyJetDifficulty');
+  if (DIFFICULTY_SETTINGS.some((d) => d.id === savedDifficulty)) selectedDifficultyId = savedDifficulty;
+} catch (e) {}
 let level = 1;
 let phase = 'normal';        // 'normal' | 'boss'
 let dodgesThisLevel = 0;
-function levelSpeed() { return 1 + (level - 1) * 0.18; }
+function currentDifficultySetting() {
+  return DIFFICULTY_SETTINGS.find((d) => d.id === selectedDifficultyId) || DIFFICULTY_SETTINGS[1];
+}
+function bossTargetDodges() {
+  return Math.round(BOSS_AT * currentDifficultySetting().bossAtMul);
+}
+function levelSpeed() { return (1 + (level - 1) * 0.18) * currentDifficultySetting().speedMul; }
 
-const BOSS_PALETTE = { main: '#b44df0', light: '#e0b3ff', glow: 'rgba(190, 80, 255, 0.35)' };
-const boss = { active: false, x: 0, y: 0, r: 0, hp: 10, maxHp: 10, t: 0, flash: 0, fireTimer: 0, entering: false };
+const BOSS_PALETTES = [
+  {
+    main: '#b44df0',
+    light: '#e0b3ff',
+    glow: 'rgba(190, 80, 255, 0.35)',
+    bar: 'linear-gradient(90deg, #b44df0, #ff5e8a)',
+    barGlow: 'rgba(255, 94, 138, 0.7)',
+    shot: 'rgba(255,94,207,0.85)',
+    shotFade: 'rgba(255,60,180,0)',
+  },
+  {
+    main: '#20bfa8',
+    light: '#a9fff0',
+    glow: 'rgba(42, 230, 190, 0.35)',
+    bar: 'linear-gradient(90deg, #20bfa8, #8df05a)',
+    barGlow: 'rgba(80, 235, 185, 0.7)',
+    shot: 'rgba(90,255,206,0.85)',
+    shotFade: 'rgba(20,220,170,0)',
+  },
+  {
+    main: '#f06a32',
+    light: '#ffd0a8',
+    glow: 'rgba(255, 120, 45, 0.38)',
+    bar: 'linear-gradient(90deg, #f06a32, #ffd54d)',
+    barGlow: 'rgba(255, 150, 55, 0.78)',
+    shot: 'rgba(255,174,75,0.88)',
+    shotFade: 'rgba(255,90,40,0)',
+  },
+];
+function bossPalette() { return BOSS_PALETTES[level - 1] || BOSS_PALETTES[0]; }
+const BOSS_STAGES = [
+  { name: 'BLASTER', banner: 'BLASTER BOSS!', hp: 10, pattern: 'aimed', move: 'sway', interval: 1.45 },
+  { name: 'WAVER', banner: 'WAVE BOSS!', hp: 18, pattern: 'wave', move: 'figure8', interval: 1.2 },
+  { name: 'COMET', banner: 'COMET BOSS!', hp: 26, pattern: 'comet', move: 'dash', interval: 1.05 },
+];
+function bossStage() { return BOSS_STAGES[level - 1] || BOSS_STAGES[0]; }
+const boss = { active: false, x: 0, y: 0, r: 0, hp: 10, maxHp: 10, t: 0, flash: 0, fireTimer: 0, fireCount: 0, entering: false };
 const bossBullets = [];
 const smokes = [];
 const bossBarEl = document.getElementById('bossbar');
+const bossBarLabelEl = document.getElementById('bossbar-label');
 const bossBarFillEl = document.getElementById('bossbar-fill');
 
 function updateBossBar() {
   bossBarFillEl.style.width = (boss.hp / boss.maxHp * 100) + '%';
+  const p = bossPalette();
+  const stage = bossStage();
+  bossBarLabelEl.textContent = '👾 ' + stage.name + ' BOSS';
+  bossBarLabelEl.style.color = p.light;
+  bossBarFillEl.style.background = p.bar;
+  bossBarFillEl.style.boxShadow = '0 0 10px ' + p.barGlow;
 }
 
 function startBossFight() {
@@ -924,15 +1386,17 @@ function startBossFight() {
   boss.r = clamp(Math.min(W, H) * 0.15, 46, 110);
   boss.x = W / 2;
   boss.y = -boss.r * 2;
+  boss.maxHp = Math.max(4, Math.round(bossStage().hp * currentDifficultySetting().bossHpMul));
   boss.hp = boss.maxHp;
   boss.t = 0;
   boss.flash = 0;
   boss.entering = true;
-  boss.fireTimer = 1.4;
+  boss.fireTimer = bossStage().interval * currentDifficultySetting().bossFireMul;
+  boss.fireCount = 0;
   bossBullets.length = 0;
   updateBossBar();
   bossBarEl.classList.add('visible');
-  showBanner('BOSS TIME!');
+  showBanner(bossStage().banner);
   setAmmo(Math.max(ammo, START_AMMO), true); // never enter the fight dry
   sfxAlarm();
 }
@@ -941,18 +1405,27 @@ function updateBoss(dt) {
   if (!boss.active) return;
   boss.t += dt;
   boss.flash = Math.max(0, boss.flash - dt);
+  const stage = bossStage();
   const targetY = H * 0.20;
+  const range = Math.max(0, W / 2 - boss.r * 1.15);
   if (boss.entering) {
     boss.y += (targetY - boss.y) * Math.min(1, dt * 1.8);
     if (Math.abs(boss.y - targetY) < 4) boss.entering = false;
   } else {
-    boss.y = targetY + Math.sin(boss.t * 1.3) * 10 * K;
-    boss.x = W / 2 + Math.sin(boss.t * 0.55) * (W / 2 - boss.r * 1.15);
+    if (stage.move === 'figure8') {
+      boss.x = W / 2 + Math.sin(boss.t * 0.85) * range;
+      boss.y = targetY + Math.sin(boss.t * 1.7) * 18 * K;
+    } else if (stage.move === 'dash') {
+      boss.x = W / 2 + Math.sin(boss.t * 1.15) * range + Math.sin(boss.t * 4.1) * 18 * K;
+      boss.y = targetY + Math.sin(boss.t * 2.2) * 12 * K;
+    } else {
+      boss.y = targetY + Math.sin(boss.t * 1.3) * 10 * K;
+      boss.x = W / 2 + Math.sin(boss.t * 0.55) * range;
+    }
     boss.fireTimer -= dt;
     if (boss.fireTimer <= 0) {
       bossFire();
-      // fires faster on later levels and as he takes damage
-      boss.fireTimer = Math.max(0.6, 1.6 - level * 0.18 - (boss.maxHp - boss.hp) * 0.05) * rand(0.8, 1.25);
+      boss.fireTimer = Math.max(0.48, (stage.interval - (boss.maxHp - boss.hp) * 0.035) * currentDifficultySetting().bossFireMul) * rand(0.82, 1.18);
     }
   }
   // At 7 hits taken (3 HP left) he starts fuming
@@ -962,16 +1435,52 @@ function updateBoss(dt) {
 }
 
 function bossFire() {
-  const shots = boss.hp <= 3 ? 3 : (boss.hp <= 6 ? 2 : 1);
-  for (let i = 0; i < shots; i++) {
-    const spread = (i - (shots - 1) / 2) * 0.22;
-    const ang = Math.atan2(jet.y - boss.y, jet.x - boss.x) + spread + rand(-0.06, 0.06);
-    const sp = (270 + level * 40) * K;
-    bossBullets.push({
-      x: boss.x, y: boss.y + boss.r * 0.5,
-      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
-      r: 7 * Math.max(K, 0.8), t: 0,
-    });
+  const stage = bossStage();
+  boss.fireCount++;
+  if (stage.pattern === 'wave') {
+    const lanes = boss.hp <= 4 ? 5 : 4;
+    for (let i = 0; i < lanes; i++) {
+      const offset = (i - (lanes - 1) / 2) * boss.r * 0.34;
+      bossBullets.push({
+        type: 'wave',
+        x: boss.x + offset,
+        baseX: boss.x + offset,
+        y: boss.y + boss.r * 0.48,
+        vx: 0,
+        vy: (255 + level * 34) * K,
+        r: 6.5 * Math.max(K, 0.8),
+        t: 0,
+        amp: (18 + i * 3) * K,
+        freq: 5.6,
+        phase: i * 1.7 + boss.fireCount,
+      });
+    }
+  } else if (stage.pattern === 'comet') {
+    const shots = boss.hp <= 5 ? 3 : 2;
+    for (let i = 0; i < shots; i++) {
+      const spread = (i - (shots - 1) / 2) * 0.34;
+      const ang = Math.atan2(jet.y - boss.y, jet.x - boss.x) + spread + rand(-0.04, 0.04);
+      const sp = (230 + level * 36) * K;
+      bossBullets.push({
+        type: 'comet',
+        x: boss.x, y: boss.y + boss.r * 0.42,
+        vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+        r: 10 * Math.max(K, 0.8), t: 0,
+      });
+    }
+  } else {
+    const shots = boss.hp <= 3 ? 3 : (boss.hp <= 6 ? 2 : 1);
+    for (let i = 0; i < shots; i++) {
+      const spread = (i - (shots - 1) / 2) * 0.22;
+      const ang = Math.atan2(jet.y - boss.y, jet.x - boss.x) + spread + rand(-0.06, 0.06);
+      const sp = (270 + level * 40) * K;
+      bossBullets.push({
+        type: 'bolt',
+        x: boss.x, y: boss.y + boss.r * 0.5,
+        vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+        r: 7 * Math.max(K, 0.8), t: 0,
+      });
+    }
   }
   sfxBossShoot();
 }
@@ -981,8 +1490,14 @@ function updateBossBullets(dt) {
   for (let i = bossBullets.length - 1; i >= 0; i--) {
     const b = bossBullets[i];
     b.t += dt;
+    if (b.type === 'comet') {
+      const ang = Math.atan2(jet.y - b.y, jet.x - b.x);
+      b.vx += Math.cos(ang) * 75 * K * dt;
+      b.vy += Math.sin(ang) * 75 * K * dt;
+    }
     b.x += b.vx * dt;
     b.y += b.vy * dt;
+    if (b.type === 'wave') b.x = b.baseX + Math.sin(b.t * b.freq + b.phase) * b.amp;
     if (b.y > H + 30 || b.x < -30 || b.x > W + 30) { bossBullets.splice(i, 1); continue; }
     const dx = b.x - jet.x, dy = b.y - jet.y;
     const rr = jr + b.r * 0.9;
@@ -996,28 +1511,52 @@ function updateBossBullets(dt) {
 
 function drawBossBullets(t) {
   if (!bossBullets.length) return;
+  const p = bossPalette();
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   for (const b of bossBullets) {
     const pulse = 1 + Math.sin(b.t * 14) * 0.15;
-    const rr = b.r * 1.9 * pulse;
+    const rr = b.r * (b.type === 'comet' ? 2.4 : 1.9) * pulse;
     const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, rr);
     g.addColorStop(0, 'rgba(255,255,255,0.95)');
-    g.addColorStop(0.35, 'rgba(255,94,207,0.85)');
-    g.addColorStop(1, 'rgba(255,60,180,0)');
+    g.addColorStop(0.35, p.shot);
+    g.addColorStop(1, p.shotFade);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(b.x, b.y, rr, 0, Math.PI * 2);
     ctx.fill();
+    if (b.type === 'wave') {
+      ctx.strokeStyle = p.light;
+      ctx.lineWidth = 2 * K;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, rr * 0.55, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (b.type === 'comet') {
+      ctx.strokeStyle = p.light;
+      ctx.lineWidth = 3 * K;
+      ctx.beginPath();
+      ctx.moveTo(b.x - b.vx * 0.04, b.y - b.vy * 0.04);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
 
-function hitBoss(x, y) {
-  boss.hp--;
+function hitBoss(x, y, damage, explosive) {
+  const hitDamage = Math.max(1, damage || 1);
+  boss.hp = Math.max(0, boss.hp - hitDamage);
   boss.flash = 0.12;
   updateBossBar();
-  spawnBurst(x, y, 16, BOSS_PALETTE);
+  spawnBurst(x, y, explosive ? 34 : 16, bossPalette());
+  if (explosive) {
+    spawnPopup(x, y, '-' + hitDamage);
+    for (let i = bossBullets.length - 1; i >= 0; i--) {
+      const b = bossBullets[i];
+      const dx = b.x - x, dy = b.y - y;
+      if (dx * dx + dy * dy < (boss.r * 1.4) * (boss.r * 1.4)) bossBullets.splice(i, 1);
+    }
+  }
   sfxBossHit();
   if (boss.hp <= 0) killBoss();
 }
@@ -1026,8 +1565,9 @@ function killBoss() {
   boss.active = false;
   bossBullets.length = 0;
   smokes.length = 0;
+  const p = bossPalette();
   for (let i = 0; i < 5; i++) {
-    spawnBurst(boss.x + rand(-0.6, 0.6) * boss.r, boss.y + rand(-0.6, 0.6) * boss.r, rand(24, 44), pick(ALIEN_PALETTES));
+    spawnBurst(boss.x + rand(-0.6, 0.6) * boss.r, boss.y + rand(-0.6, 0.6) * boss.r, rand(24, 44), p);
   }
   sfxBossDie();
   score += 10;
@@ -1038,19 +1578,20 @@ function killBoss() {
   level++;
   dodgesThisLevel = 0;
   phase = 'normal';
-  scoreSubEl.innerHTML = 'LEVEL ' + level + ' &nbsp;•&nbsp; ALIENS DODGED';
+  scoreSubEl.innerHTML = currentDifficultySetting().label + ' &nbsp;•&nbsp; LEVEL ' + level;
   showBanner('LEVEL ' + level + '!');
 }
 
 function drawBoss(t) {
   if (!boss.active) return;
   const { x, y, r } = boss;
+  const p = bossPalette();
   ctx.save();
   ctx.translate(x, y);
 
   // Menacing (but cute) aura
   const glow = ctx.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 2);
-  glow.addColorStop(0, BOSS_PALETTE.glow);
+  glow.addColorStop(0, p.glow);
   glow.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = glow;
   ctx.beginPath();
@@ -1075,9 +1616,9 @@ function drawBoss(t) {
 
   // Giant jelly body
   const bodyG = ctx.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.15, 0, 0, r);
-  bodyG.addColorStop(0, BOSS_PALETTE.light);
-  bodyG.addColorStop(0.65, BOSS_PALETTE.main);
-  bodyG.addColorStop(1, shade(BOSS_PALETTE.main));
+  bodyG.addColorStop(0, p.light);
+  bodyG.addColorStop(0.65, p.main);
+  bodyG.addColorStop(1, shade(p.main));
   ctx.fillStyle = bodyG;
   ctx.beginPath();
   ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
@@ -1088,6 +1629,34 @@ function drawBoss(t) {
   ctx.beginPath(); ctx.arc(-r * 0.45, r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(r * 0.5, r * 0.15, r * 0.1, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(r * 0.15, r * 0.55, r * 0.08, 0, Math.PI * 2); ctx.fill();
+
+  const stage = bossStage();
+  if (stage.pattern === 'wave') {
+    ctx.strokeStyle = p.light;
+    ctx.lineWidth = r * 0.045;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.arc(side * r * 0.62, -r * 0.18, r * 0.16 + Math.sin(boss.t * 5) * r * 0.02, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(side * r * 0.48, -r * 0.44);
+      ctx.lineTo(side * r * 0.72, -r * 0.78);
+      ctx.stroke();
+    }
+  } else if (stage.pattern === 'comet') {
+    const flame = ctx.createLinearGradient(0, -r * 1.05, 0, -r * 0.45);
+    flame.addColorStop(0, '#fff2a8');
+    flame.addColorStop(0.45, p.light);
+    flame.addColorStop(1, p.main);
+    ctx.fillStyle = flame;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(side * r * 0.28, -r * 0.72);
+      ctx.quadraticCurveTo(side * r * 0.46, -r * 1.1, side * r * 0.08, -r * 1.0);
+      ctx.quadraticCurveTo(side * r * 0.2, -r * 0.84, side * r * 0.28, -r * 0.72);
+      ctx.fill();
+    }
+  }
 
   // Angry googly eyes tracking the jet
   const lookX = clamp((jet.x - x) / W * 3, -1, 1);
@@ -1102,7 +1671,7 @@ function drawBoss(t) {
     ctx.arc(ex + lookX * r * 0.09, -r * 0.14, r * 0.11, 0, Math.PI * 2);
     ctx.fill();
     // Slanted eyebrow
-    ctx.strokeStyle = shade(BOSS_PALETTE.main);
+    ctx.strokeStyle = shade(p.main);
     ctx.lineWidth = r * 0.09;
     ctx.lineCap = 'round';
     ctx.beginPath();
@@ -1507,20 +2076,172 @@ muteBtn.addEventListener('pointerdown', (e) => {
 });
 updateMuteBtn();
 
-// Pause audio when the tab is hidden
-document.addEventListener('visibilitychange', () => {
-  if (!AC) return;
-  if (document.hidden) AC.suspend(); else AC.resume();
-});
-
 // ---------- Game state ----------
-let state = 'menu'; // 'menu' | 'playing' | 'over'
+let state = 'menu'; // 'menu' | 'playing' | 'over' | 'won'
 let score = 0;
 let best = 0;
 try { best = parseInt(localStorage.getItem('ashleyJetBest') || '0', 10) || 0; } catch (e) {}
 let elapsed = 0;
 let difficulty = 0;
 let crashTime = 0;
+
+// Shop sidebar
+const shopButtons = document.querySelectorAll('.shop-open-btn');
+const shopEl = document.getElementById('shop');
+const shopBackdrop = document.getElementById('shop-backdrop');
+const shopClose = document.getElementById('shop-close');
+const shopPointsEl = document.getElementById('shop-points');
+const shopColorsEl = document.getElementById('shop-colors');
+const pointsEarnedLine = document.getElementById('points-earned-line');
+const winPointsEarned = document.getElementById('win-points-earned');
+
+function setShopOpen(open) {
+  shopOpen = open;
+  shopEl.classList.toggle('open', open);
+  shopBackdrop.classList.toggle('hidden', !open);
+}
+
+function updateShopBtnVisibility() {
+  for (const btn of shopButtons) {
+    btn.disabled = state === 'playing';
+  }
+}
+
+function stopGameTap(e) {
+  e.stopPropagation();
+  e.preventDefault();
+}
+
+function updateShopUI() {
+  shopPointsEl.textContent = '⭐ ' + shopPoints + ' point' + (shopPoints === 1 ? '' : 's');
+  shopColorsEl.innerHTML = '';
+  const weaponsTitle = document.createElement('div');
+  weaponsTitle.className = 'shop-section-title';
+  weaponsTitle.textContent = 'Boss Helpers';
+  shopColorsEl.appendChild(weaponsTitle);
+
+  for (const w of SHOP_WEAPONS) {
+    const levelNow = weaponLevel(w.id);
+    const maxed = levelNow >= w.maxLevel;
+    const row = document.createElement('div');
+    row.className = 'shop-item' + (levelNow > 0 ? ' equipped' : '');
+
+    const swatch = document.createElement('div');
+    swatch.className = 'shop-swatch weapon';
+    swatch.textContent = w.icon;
+
+    const info = document.createElement('div');
+    info.className = 'shop-item-info';
+    const name = document.createElement('div');
+    name.className = 'shop-item-name';
+    name.textContent = w.name;
+    const status = document.createElement('div');
+    status.className = 'shop-item-status';
+    if (w.id === 'gun') {
+      status.textContent = levelNow === 0 ? 'Single shot' : 'Double shot';
+    } else {
+      status.textContent = levelNow === 0 ? 'No bombs yet' : (levelNow === 1 ? 'Level 1: every 5th shot' : 'Level 2: every 3rd shot');
+    }
+    info.appendChild(name);
+    info.appendChild(status);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'shop-item-btn';
+    btn.addEventListener('pointerdown', stopGameTap);
+    if (maxed) {
+      btn.className += ' equipped-label';
+      btn.textContent = 'MAX';
+      btn.disabled = true;
+    } else {
+      btn.className += ' unlock';
+      btn.textContent = w.cost + ' pts';
+      btn.disabled = shopPoints < w.cost;
+      btn.addEventListener('click', () => buyWeapon(w.id));
+    }
+
+    row.appendChild(swatch);
+    row.appendChild(info);
+    row.appendChild(btn);
+    shopColorsEl.appendChild(row);
+  }
+
+  const colorsTitle = document.createElement('div');
+  colorsTitle.className = 'shop-section-title';
+  colorsTitle.textContent = 'Jet Colors';
+  shopColorsEl.appendChild(colorsTitle);
+
+  for (const c of JET_COLORS) {
+    const unlocked = isColorUnlocked(c.id);
+    const equipped = jetColorId === c.id;
+    const row = document.createElement('div');
+    row.className = 'shop-item' + (equipped ? ' equipped' : '');
+
+    const swatch = document.createElement('div');
+    swatch.className = 'shop-swatch' + (unlocked ? '' : ' locked');
+    swatch.style.background = c.swatch;
+
+    const info = document.createElement('div');
+    info.className = 'shop-item-info';
+    const name = document.createElement('div');
+    name.className = 'shop-item-name';
+    name.textContent = c.name;
+    const status = document.createElement('div');
+    status.className = 'shop-item-status';
+    if (unlocked) {
+      status.textContent = equipped ? 'Equipped on your jet' : 'Unlocked';
+    } else if (c.cost === 0) {
+      status.textContent = 'Free starter color';
+    } else {
+      status.textContent = 'Locked — costs ' + c.cost + ' points';
+    }
+    info.appendChild(name);
+    info.appendChild(status);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'shop-item-btn';
+    btn.addEventListener('pointerdown', stopGameTap);
+    if (unlocked) {
+      if (equipped) {
+        btn.className += ' equipped-label';
+        btn.textContent = 'ON';
+        btn.disabled = true;
+      } else {
+        btn.className += ' equip';
+        btn.textContent = 'EQUIP';
+        btn.addEventListener('click', () => equipColor(c.id));
+      }
+    } else {
+      btn.className += ' unlock';
+      btn.textContent = c.cost + ' pts';
+      btn.disabled = shopPoints < c.cost;
+      btn.addEventListener('click', () => unlockColor(c.id));
+    }
+
+    row.appendChild(swatch);
+    row.appendChild(info);
+    row.appendChild(btn);
+    shopColorsEl.appendChild(row);
+  }
+}
+
+for (const btn of shopButtons) {
+  btn.addEventListener('pointerdown', stopGameTap);
+  btn.addEventListener('click', () => setShopOpen(true));
+}
+shopClose.addEventListener('pointerdown', stopGameTap);
+shopClose.addEventListener('click', () => setShopOpen(false));
+shopBackdrop.addEventListener('pointerdown', stopGameTap);
+shopBackdrop.addEventListener('click', () => setShopOpen(false));
+updateShopUI();
+updateShopBtnVisibility();
+
+// Pause audio when the tab is hidden
+document.addEventListener('visibilitychange', () => {
+  if (!AC) return;
+  if (document.hidden) AC.suspend(); else AC.resume();
+});
 
 function startGame() {
   aliens.length = 0;
@@ -1533,6 +2254,8 @@ function startGame() {
   difficulty = 0;
   spawnTimer = 1.0;
   setAmmo(START_AMMO);
+  shotsFired = 0;
+  lastShotAt = -Infinity;
   level = 1;
   phase = 'normal';
   dodgesThisLevel = 0;
@@ -1541,17 +2264,21 @@ function startGame() {
   smokes.length = 0;
   banner = null;
   bossBarEl.classList.remove('visible');
-  scoreSubEl.innerHTML = 'LEVEL 1 &nbsp;•&nbsp; ALIENS DODGED';
+  scoreSubEl.innerHTML = currentDifficultySetting().label + ' &nbsp;•&nbsp; LEVEL 1';
   jet.x = jet.targetX = W / 2;
   jet.y = jet.targetY = jetMargins().defaultY;
   jet.bank = 0;
   jet.pitch = 0;
   scoreEl.textContent = '0';
+  pointsEarnedLine.style.display = 'none';
+  winPointsEarned.style.display = 'none';
   menuEl.classList.add('hidden');
   overEl.classList.add('hidden');
   winEl.classList.add('hidden');
   hudEl.classList.add('visible');
+  setShopOpen(false);
   state = 'playing';
+  updateShopBtnVisibility();
 }
 
 function gameOver() {
@@ -1559,6 +2286,7 @@ function gameOver() {
   crashTime = 0;
   sfxCrash();
   hudEl.classList.remove('visible');
+  const earned = bankRunPoints(score);
   const isNewBest = score > best;
   if (isNewBest) {
     best = score;
@@ -1567,6 +2295,13 @@ function gameOver() {
   finalScoreEl.textContent = score;
   bestLineEl.textContent = 'Best: ' + best;
   newBestEl.style.display = isNewBest && score > 0 ? 'inline-block' : 'none';
+  if (earned > 0) {
+    pointsEarnedLine.textContent = '+' + earned + ' shop point' + (earned === 1 ? '' : 's') + ' earned!';
+    pointsEarnedLine.style.display = 'block';
+  } else {
+    pointsEarnedLine.style.display = 'none';
+  }
+  updateShopBtnVisibility();
   setTimeout(() => overEl.classList.remove('hidden'), 850);
 }
 
@@ -1574,6 +2309,7 @@ function winGame() {
   state = 'won';
   overSince = performance.now();
   hudEl.classList.remove('visible');
+  const earned = bankRunPoints(score);
   const isNewBest = score > best;
   if (isNewBest) {
     best = score;
@@ -1581,6 +2317,13 @@ function winGame() {
   }
   winScoreEl.textContent = score;
   winBestEl.style.display = isNewBest ? 'inline-block' : 'none';
+  if (earned > 0) {
+    winPointsEarned.textContent = '+' + earned + ' shop point' + (earned === 1 ? '' : 's') + ' earned!';
+    winPointsEarned.style.display = 'block';
+  } else {
+    winPointsEarned.style.display = 'none';
+  }
+  updateShopBtnVisibility();
   sfxWin();
   setTimeout(() => winEl.classList.remove('hidden'), 1400);
 }
@@ -1606,15 +2349,89 @@ const DRAG_SENSITIVITY = 1.55;
 const TAP_MAX_DIST = 14;   // px of finger travel before a press counts as a drag
 const TAP_MAX_MS = 280;    // press longer than this = steering, not shooting
 
+function isUiTap(target) {
+  return target.closest('#shop, #shop-backdrop, .shop-open-btn, #mute-btn');
+}
+
+function tryStartFromOverlay() {
+  if (shopOpen || state !== 'menu') return;
+  initAudio();
+  startGame();
+}
+
+function tryRestartFromOverlay() {
+  if (shopOpen) return;
+  if ((state === 'over' || state === 'won') && performance.now() - overSince > 900) {
+    initAudio();
+    startGame();
+  }
+}
+
+function bindOverlayButton(btn, handler) {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    handler();
+  });
+  btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+}
+
+const startBtn = document.getElementById('start-btn');
+const overRestartBtn = document.getElementById('over-restart-btn');
+const winRestartBtn = document.getElementById('win-restart-btn');
+const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+
+function updateDifficultyUI() {
+  for (const btn of difficultyBtns) {
+    const selected = btn.dataset.difficulty === selectedDifficultyId;
+    btn.classList.toggle('selected', selected);
+    btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  }
+}
+
+function chooseDifficulty(id) {
+  if (!DIFFICULTY_SETTINGS.some((d) => d.id === id)) return;
+  selectedDifficultyId = id;
+  try { localStorage.setItem('ashleyJetDifficulty', selectedDifficultyId); } catch (err) {}
+  updateDifficultyUI();
+}
+
+bindOverlayButton(startBtn, tryStartFromOverlay);
+bindOverlayButton(overRestartBtn, tryRestartFromOverlay);
+bindOverlayButton(winRestartBtn, tryRestartFromOverlay);
+
+for (const btn of difficultyBtns) {
+  btn.addEventListener('pointerdown', (e) => {
+    stopGameTap(e);
+    chooseDifficulty(btn.dataset.difficulty);
+  });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    chooseDifficulty(btn.dataset.difficulty);
+  });
+}
+updateDifficultyUI();
+
+menuEl.addEventListener('click', (e) => {
+  if (state !== 'menu' || shopOpen || isUiTap(e.target)) return;
+  if (e.target.closest('button')) return;
+  tryStartFromOverlay();
+});
+overEl.addEventListener('click', (e) => {
+  if (state !== 'over' || shopOpen || isUiTap(e.target)) return;
+  if (e.target.closest('button')) return;
+  tryRestartFromOverlay();
+});
+winEl.addEventListener('click', (e) => {
+  if (state !== 'won' || shopOpen || isUiTap(e.target)) return;
+  if (e.target.closest('button')) return;
+  tryRestartFromOverlay();
+});
+
 window.addEventListener('pointerdown', (e) => {
+  if (isUiTap(e.target) || shopOpen) return;
+  if (state === 'menu' || state === 'over' || state === 'won') return;
   e.preventDefault();
   initAudio(); // browsers only allow audio to start from a user gesture
-  if (state === 'menu') { startGame(); return; }
-  if (state === 'over' || state === 'won') {
-    // small delay so a frantic dodge-tap doesn't instantly restart
-    if (performance.now() - overSince > 900) startGame();
-    return;
-  }
   if (e.pointerType === 'mouse') {
     // Desktop: the jet already follows the cursor — left click just shoots
     if (e.button === 0) fireBullet();
@@ -1713,7 +2530,7 @@ function frame(now) {
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
       spawnAlien();
-      let gap = (1.15 - difficulty * 0.72) / levelSpeed(); // 1.15s -> 0.43s, faster per level
+      let gap = ((1.15 - difficulty * 0.72) * currentDifficultySetting().spawnMul) / levelSpeed();
       if (phase === 'boss') gap *= 2.2;
       spawnTimer = gap * rand(0.75, 1.25);
     }
