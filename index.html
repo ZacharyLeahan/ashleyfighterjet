@@ -121,6 +121,54 @@
     background: linear-gradient(180deg, #fff1a8, #6be4ff);
     box-shadow: 0 4px 16px rgba(100, 210, 255, 0.38);
   }
+  .stage-mode {
+    display: grid;
+    grid-template-columns: 58px minmax(180px, 280px) 58px;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 14px;
+    touch-action: pan-y;
+  }
+  .stage-mode-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.10);
+    color: #fff;
+    font-family: inherit;
+    font-size: 34px;
+    font-weight: 900;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .stage-mode-panel {
+    min-height: 86px;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.05));
+    box-shadow: 0 8px 22px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.12);
+    display: grid;
+    place-items: center;
+    padding: 12px 16px;
+  }
+  .stage-mode-name {
+    color: #fff;
+    font-size: clamp(24px, 6.5vw, 34px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    line-height: 1;
+    text-shadow: 0 3px 14px rgba(100, 170, 255, 0.45), 0 2px 6px rgba(0,0,0,0.65);
+  }
+  .stage-mode-best {
+    color: #ffe36e;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    margin-top: 8px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.55);
+  }
   @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50%      { transform: scale(1.07); }
@@ -466,6 +514,14 @@
   <div class="hint">Slide your thumb to steer &nbsp;•&nbsp; Tap to shoot!</div>
   <div class="hint" style="opacity:0.8; font-size:0.85em">You start with 10 bullets — dodge aliens to earn more! 🔸</div>
   <div class="hint" style="margin-top:10px; opacity:0.85; font-size:0.85em">Open the Shop for boss bombs, stronger guns, and jet colors!</div>
+  <div class="stage-mode" aria-label="Choose mode">
+    <button type="button" class="stage-mode-btn stage-prev" aria-label="Previous mode">&lt;</button>
+    <div class="stage-mode-panel">
+      <div class="stage-mode-name">SPACE</div>
+      <div class="stage-mode-best">BEST: 0</div>
+    </div>
+    <button type="button" class="stage-mode-btn stage-next" aria-label="Next mode">&gt;</button>
+  </div>
   <div class="difficulty-picker" aria-label="Choose difficulty">
     <button type="button" class="difficulty-btn" data-difficulty="easy">EASY</button>
     <button type="button" class="difficulty-btn selected" data-difficulty="medium">MEDIUM</button>
@@ -486,6 +542,14 @@
   <div class="score-label">FINAL SCORE</div>
   <div id="win-points-earned" class="points-earned" style="display:none"></div>
   <div id="win-best-badge" class="new-best" style="display:none">🌟 NEW BEST! 🌟</div>
+  <div class="stage-mode" aria-label="Choose mode">
+    <button type="button" class="stage-mode-btn stage-prev" aria-label="Previous mode">&lt;</button>
+    <div class="stage-mode-panel">
+      <div class="stage-mode-name">SPACE</div>
+      <div class="stage-mode-best">BEST: 0</div>
+    </div>
+    <button type="button" class="stage-mode-btn stage-next" aria-label="Next mode">&gt;</button>
+  </div>
   <div class="overlay-actions">
     <button type="button" class="tap-label" id="win-restart-btn">TAP TO PLAY AGAIN</button>
     <button type="button" class="shop-open-btn" aria-label="Open shop">🛒 Shop</button>
@@ -499,9 +563,22 @@
   <div id="points-earned-line" class="points-earned" style="display:none"></div>
   <div id="new-best-badge" class="new-best" style="display:none">🌟 NEW BEST! 🌟</div>
   <div class="best-line" id="best-line">Best: 0</div>
+  <div class="stage-mode" aria-label="Choose mode">
+    <button type="button" class="stage-mode-btn stage-prev" aria-label="Previous mode">&lt;</button>
+    <div class="stage-mode-panel">
+      <div class="stage-mode-name">SPACE</div>
+      <div class="stage-mode-best">BEST: 0</div>
+    </div>
+    <button type="button" class="stage-mode-btn stage-next" aria-label="Next mode">&gt;</button>
+  </div>
   <div class="overlay-actions">
     <button type="button" class="tap-label" id="over-restart-btn">TAP TO FLY AGAIN</button>
     <button type="button" class="shop-open-btn" aria-label="Open shop">🛒 Shop</button>
+  </div>
+  <div class="difficulty-picker" aria-label="Choose difficulty">
+    <button type="button" class="difficulty-btn" data-difficulty="easy">EASY</button>
+    <button type="button" class="difficulty-btn selected" data-difficulty="medium">MEDIUM</button>
+    <button type="button" class="difficulty-btn" data-difficulty="hard">HARD</button>
   </div>
 </div>
 
@@ -606,6 +683,286 @@ function buildVignette() {
   v.fillRect(0, 0, W, H);
 }
 
+// ---------- Stage environments ----------
+const moonCraters = [
+  { x: 0.10, y: 0.18, r: 0.040 },
+  { x: 0.28, y: 0.38, r: 0.065 },
+  { x: 0.47, y: 0.24, r: 0.032 },
+  { x: 0.68, y: 0.46, r: 0.075 },
+  { x: 0.86, y: 0.28, r: 0.048 },
+  { x: 0.18, y: 0.68, r: 0.085 },
+  { x: 0.54, y: 0.76, r: 0.052 },
+  { x: 0.78, y: 0.72, r: 0.038 },
+];
+
+function drawMoonStage(t, speedMul) {
+  if (selectedStageId !== 'moon' || level !== 1 || state === 'won') return;
+
+  ctx.save();
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, 'rgba(0, 0, 10, 0.58)');
+  sky.addColorStop(0.55, 'rgba(8, 12, 30, 0.34)');
+  sky.addColorStop(1, 'rgba(70, 75, 90, 0.22)');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // Distant Earth, hanging over the first lunar stage.
+  const earthX = W * 0.78;
+  const earthY = H * 0.16;
+  const earthR = clamp(Math.min(W, H) * 0.055, 24, 54);
+  const earthGlow = ctx.createRadialGradient(earthX, earthY, earthR * 0.5, earthX, earthY, earthR * 2.3);
+  earthGlow.addColorStop(0, 'rgba(110, 180, 255, 0.35)');
+  earthGlow.addColorStop(1, 'rgba(110, 180, 255, 0)');
+  ctx.fillStyle = earthGlow;
+  ctx.beginPath();
+  ctx.arc(earthX, earthY, earthR * 2.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  const earthG = ctx.createRadialGradient(earthX - earthR * 0.35, earthY - earthR * 0.35, earthR * 0.12, earthX, earthY, earthR);
+  earthG.addColorStop(0, '#d9f6ff');
+  earthG.addColorStop(0.35, '#4aa5ff');
+  earthG.addColorStop(1, '#123a83');
+  ctx.fillStyle = earthG;
+  ctx.beginPath();
+  ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(90, 215, 130, 0.75)';
+  ctx.beginPath();
+  ctx.ellipse(earthX - earthR * 0.24, earthY + earthR * 0.05, earthR * 0.20, earthR * 0.36, -0.6, 0, Math.PI * 2);
+  ctx.ellipse(earthX + earthR * 0.22, earthY - earthR * 0.18, earthR * 0.28, earthR * 0.16, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  const moonR = Math.max(W * 0.78, H * 0.58);
+  const moonX = W * 0.5;
+  const moonY = H * 1.17;
+  const limbY = moonY - moonR;
+  const limbGlow = ctx.createLinearGradient(0, limbY - 80 * K, 0, limbY + 90 * K);
+  limbGlow.addColorStop(0, 'rgba(220, 225, 238, 0)');
+  limbGlow.addColorStop(0.62, 'rgba(226, 230, 238, 0.58)');
+  limbGlow.addColorStop(1, 'rgba(170, 176, 190, 0.12)');
+  ctx.fillStyle = limbGlow;
+  ctx.fillRect(0, limbY - 80 * K, W, H - limbY + 80 * K);
+
+  const moonG = ctx.createRadialGradient(moonX - moonR * 0.34, moonY - moonR * 0.74, moonR * 0.05, moonX, moonY, moonR);
+  moonG.addColorStop(0, '#f2f4fa');
+  moonG.addColorStop(0.32, '#d6dae5');
+  moonG.addColorStop(0.68, '#9da4b5');
+  moonG.addColorStop(1, '#606777');
+  ctx.fillStyle = moonG;
+  ctx.beginPath();
+  ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 2 * K;
+  ctx.beginPath();
+  ctx.arc(moonX, moonY, moonR, Math.PI * 1.08, Math.PI * 1.92);
+  ctx.stroke();
+
+  const drift = (t * 0.08 * speedMul) % 1;
+  for (const c of moonCraters) {
+    const px = ((c.x + drift) % 1 - 0.5) * moonR * 1.42;
+    const curve = Math.sqrt(Math.max(0, moonR * moonR - px * px));
+    const surfaceY = moonY - curve;
+    const depth = c.y * Math.min(H * 0.30, moonR * 0.32);
+    const cx = moonX + px;
+    const cy = surfaceY + depth;
+    const curveScale = clamp((cy - limbY) / Math.max(1, H - limbY), 0.15, 1);
+    const rr = c.r * Math.min(W, H) * (0.75 + curveScale * 1.2);
+    if (cy < limbY - rr || cy > H + rr || cx < -rr || cx > W + rr) continue;
+    ctx.fillStyle = 'rgba(58, 62, 72, 0.24)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rr * (1.35 + curveScale * 0.28), rr * (0.28 + curveScale * 0.35), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(245, 247, 255, 0.24)';
+    ctx.lineWidth = Math.max(1, rr * 0.08);
+    ctx.beginPath();
+    ctx.ellipse(cx - rr * 0.10, cy - rr * 0.06, rr * 1.12, rr * (0.18 + curveScale * 0.25), 0, Math.PI, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawEarthStage(t, speedMul) {
+  if (selectedStageId !== 'earth' || level !== 1 || state === 'won') return;
+
+  ctx.save();
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, 'rgba(0, 8, 28, 0.46)');
+  sky.addColorStop(0.58, 'rgba(8, 38, 84, 0.30)');
+  sky.addColorStop(1, 'rgba(70, 170, 220, 0.16)');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  const earthR = Math.max(W * 0.82, H * 0.62);
+  const earthX = W * 0.5;
+  const earthY = H * 1.14;
+  const limbY = earthY - earthR;
+
+  const atmosphere = ctx.createRadialGradient(earthX, earthY, earthR * 0.78, earthX, earthY, earthR * 1.08);
+  atmosphere.addColorStop(0, 'rgba(90, 190, 255, 0)');
+  atmosphere.addColorStop(0.72, 'rgba(80, 190, 255, 0.20)');
+  atmosphere.addColorStop(1, 'rgba(170, 230, 255, 0.50)');
+  ctx.fillStyle = atmosphere;
+  ctx.beginPath();
+  ctx.arc(earthX, earthY, earthR * 1.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  const ocean = ctx.createRadialGradient(earthX - earthR * 0.32, earthY - earthR * 0.78, earthR * 0.06, earthX, earthY, earthR);
+  ocean.addColorStop(0, '#b9ffd9');
+  ocean.addColorStop(0.24, '#45c99f');
+  ocean.addColorStop(0.58, '#168b8f');
+  ocean.addColorStop(1, '#063f68');
+  ctx.fillStyle = ocean;
+  ctx.beginPath();
+  ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(60, 180, 120, 0.20)';
+  ctx.beginPath();
+  ctx.ellipse(earthX - earthR * 0.18, earthY - earthR * 0.70, earthR * 0.58, earthR * 0.18, -0.18, 0, Math.PI * 2);
+  ctx.ellipse(earthX + earthR * 0.24, earthY - earthR * 0.58, earthR * 0.48, earthR * 0.16, 0.22, 0, Math.PI * 2);
+  ctx.ellipse(earthX - earthR * 0.38, earthY - earthR * 0.46, earthR * 0.40, earthR * 0.13, 0.12, 0, Math.PI * 2);
+  ctx.ellipse(earthX + earthR * 0.02, earthY - earthR * 0.38, earthR * 0.62, earthR * 0.12, -0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  const drift = (t * 0.045 * speedMul) % 1;
+  const land = [
+    { x: 0.08, y: 0.18, s: 0.18, pts: [[-0.75,-0.10],[-0.42,-0.38],[-0.04,-0.30],[0.22,-0.08],[0.66,-0.16],[0.82,0.16],[0.32,0.34],[-0.12,0.24],[-0.56,0.36]] },
+    { x: 0.32, y: 0.35, s: 0.24, pts: [[-0.78,-0.22],[-0.40,-0.46],[0.02,-0.34],[0.34,-0.18],[0.82,-0.02],[0.54,0.30],[0.08,0.42],[-0.36,0.28],[-0.70,0.08]] },
+    { x: 0.58, y: 0.22, s: 0.22, pts: [[-0.62,-0.18],[-0.20,-0.42],[0.26,-0.32],[0.70,-0.08],[0.56,0.22],[0.08,0.36],[-0.34,0.28],[-0.72,0.08]] },
+    { x: 0.76, y: 0.43, s: 0.19, pts: [[-0.58,-0.24],[-0.08,-0.38],[0.42,-0.22],[0.74,0.06],[0.42,0.32],[-0.12,0.38],[-0.64,0.18]] },
+    { x: 0.90, y: 0.24, s: 0.16, pts: [[-0.60,-0.18],[-0.20,-0.34],[0.28,-0.26],[0.66,0.02],[0.30,0.28],[-0.18,0.30],[-0.58,0.10]] },
+  ];
+  for (const c of land) {
+    const px = ((c.x + drift) % 1 - 0.5) * earthR * 1.45;
+    const curve = Math.sqrt(Math.max(0, earthR * earthR - px * px));
+    const cx = earthX + px;
+    const cy = earthY - curve + c.y * Math.min(H * 0.28, earthR * 0.28);
+    const visible = clamp((cy - limbY) / Math.max(1, H - limbY), 0.08, 1);
+    const sx = earthR * c.s * visible;
+    const sy = earthR * c.s * 0.48 * visible;
+    ctx.fillStyle = 'rgba(43, 150, 76, 0.88)';
+    ctx.beginPath();
+    c.pts.forEach((pt, i) => {
+      const x = cx + pt[0] * sx;
+      const y = cy + pt[1] * sy;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(120, 185, 88, 0.42)';
+    ctx.beginPath();
+    ctx.ellipse(cx - sx * 0.12, cy - sy * 0.08, sx * 0.42, sy * 0.22, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const clouds = [
+    { x: 0.06, y: 0.16, sx: 0.18 },
+    { x: 0.29, y: 0.27, sx: 0.23 },
+    { x: 0.58, y: 0.18, sx: 0.20 },
+    { x: 0.76, y: 0.36, sx: 0.17 },
+  ];
+  for (const c of clouds) {
+    const px = ((c.x + drift * 1.35) % 1 - 0.5) * earthR * 1.48;
+    const curve = Math.sqrt(Math.max(0, earthR * earthR - px * px));
+    const cx = earthX + px;
+    const cy = earthY - curve + c.y * Math.min(H * 0.28, earthR * 0.28);
+    const visible = clamp((cy - limbY) / Math.max(1, H - limbY), 0.08, 1);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.46)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, earthR * c.sx * visible, earthR * 0.018 * visible, 0.08, 0, Math.PI * 2);
+    ctx.ellipse(cx + earthR * c.sx * 0.42 * visible, cy + earthR * 0.018 * visible, earthR * c.sx * 0.38 * visible, earthR * 0.014 * visible, -0.08, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = 'rgba(205, 245, 255, 0.58)';
+  ctx.lineWidth = 3 * K;
+  ctx.beginPath();
+  ctx.arc(earthX, earthY, earthR, Math.PI * 1.08, Math.PI * 1.92);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSaturnStage(t, speedMul) {
+  if (selectedStageId !== 'saturn' || level !== 1 || state === 'won') return;
+
+  ctx.save();
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, 'rgba(16, 8, 30, 0.52)');
+  sky.addColorStop(0.55, 'rgba(46, 24, 70, 0.30)');
+  sky.addColorStop(1, 'rgba(120, 82, 48, 0.16)');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  const ringX = W * 0.52;
+  const ringY = H * 0.28;
+  const ringR = Math.min(W, H) * 0.34;
+  ctx.save();
+  ctx.translate(ringX, ringY);
+  ctx.rotate(-0.18);
+  ctx.globalCompositeOperation = 'lighter';
+  const rings = [
+    { rx: 1.92, ry: 0.32, w: 9, c: 'rgba(255, 235, 180, 0.32)' },
+    { rx: 1.55, ry: 0.25, w: 5, c: 'rgba(225, 185, 120, 0.42)' },
+    { rx: 1.24, ry: 0.20, w: 3, c: 'rgba(255, 248, 220, 0.30)' },
+  ];
+  for (const r of rings) {
+    ctx.strokeStyle = r.c;
+    ctx.lineWidth = r.w * Math.max(K, 0.75);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, ringR * r.rx, ringR * r.ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  const saturnR = Math.max(W * 0.78, H * 0.58);
+  const saturnX = W * 0.5;
+  const saturnY = H * 1.16;
+  const limbY = saturnY - saturnR;
+  const glow = ctx.createRadialGradient(saturnX, saturnY, saturnR * 0.72, saturnX, saturnY, saturnR * 1.08);
+  glow.addColorStop(0, 'rgba(255, 210, 125, 0)');
+  glow.addColorStop(0.75, 'rgba(255, 205, 125, 0.18)');
+  glow.addColorStop(1, 'rgba(255, 235, 170, 0.42)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(saturnX, saturnY, saturnR * 1.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  const planet = ctx.createRadialGradient(saturnX - saturnR * 0.28, saturnY - saturnR * 0.78, saturnR * 0.08, saturnX, saturnY, saturnR);
+  planet.addColorStop(0, '#fff0bd');
+  planet.addColorStop(0.34, '#dfb468');
+  planet.addColorStop(0.68, '#9b6a36');
+  planet.addColorStop(1, '#55351f');
+  ctx.fillStyle = planet;
+  ctx.beginPath();
+  ctx.arc(saturnX, saturnY, saturnR, 0, Math.PI * 2);
+  ctx.fill();
+
+  const bandDrift = (t * 0.025 * speedMul) % 1;
+  const bands = [
+    { y: 0.06, h: 0.035, c: 'rgba(255, 236, 178, 0.24)' },
+    { y: 0.15, h: 0.026, c: 'rgba(130, 74, 38, 0.18)' },
+    { y: 0.24, h: 0.032, c: 'rgba(255, 218, 140, 0.20)' },
+    { y: 0.34, h: 0.026, c: 'rgba(120, 70, 42, 0.16)' },
+  ];
+  for (const b of bands) {
+    const y = limbY + (b.y + bandDrift * 0.08) * Math.min(H * 0.42, saturnR * 0.42);
+    const width = Math.sqrt(Math.max(0, saturnR * saturnR - (y - saturnY) * (y - saturnY))) * 2;
+    ctx.fillStyle = b.c;
+    ctx.beginPath();
+    ctx.ellipse(saturnX, y, width * 0.48, saturnR * b.h, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = 'rgba(255, 238, 190, 0.50)';
+  ctx.lineWidth = 3 * K;
+  ctx.beginPath();
+  ctx.arc(saturnX, saturnY, saturnR, Math.PI * 1.08, Math.PI * 1.92);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // ---------- Parallax stars ----------
 const starLayers = [];
 function initStars() {
@@ -685,24 +1042,50 @@ const JET_COLORS = [
   { id: 'orange', name: 'Orange', hue: 24, swatch: '#ff9a45', cost: COLOR_UNLOCK_COST },
   { id: 'yellow', name: 'Yellow', hue: 48, swatch: '#ffd84a', cost: COLOR_UNLOCK_COST },
   { id: 'green', name: 'Green', hue: 135, swatch: '#4ede8a', cost: COLOR_UNLOCK_COST },
+  { id: 'teal', name: 'Teal', hue: 178, swatch: '#28d7c8', cost: 100 },
   { id: 'purple', name: 'Purple', hue: 272, swatch: '#a96bff', cost: COLOR_UNLOCK_COST },
+  { id: 'dark-purple', name: 'Dark Purple', hue: 276, swatch: 'linear-gradient(135deg, #8f5cff, #351064 58%, #12051f)', cost: 100 },
   { id: 'pink', name: 'Pink', hue: 322, swatch: '#ff6eb8', cost: COLOR_UNLOCK_COST },
+  { id: 'rainbow', name: 'Rainbow', hue: 210, rainbow: true, swatch: 'linear-gradient(135deg, #ff5e8a, #ffe36e, #57e89c, #4f8cff, #a96bff)', cost: 100 },
+  { id: 'black', name: 'Black', hue: 230, swatch: 'linear-gradient(135deg, #444957, #111522 58%, #02040a)', cost: 100 },
+  { id: 'gold', name: 'Gold', hue: 45, swatch: 'linear-gradient(135deg, #fff2a8, #d7a31c 60%, #7d5600)', cost: 100 },
+  { id: 'silver', name: 'Silver', hue: 210, swatch: 'linear-gradient(135deg, #ffffff, #aeb8c6 58%, #5b6470)', cost: 100 },
+  { id: 'sparkle-black', name: 'Sparkle Black', hue: 230, sparkle: true, swatch: 'radial-gradient(circle at 28% 25%, #fff, transparent 9%), radial-gradient(circle at 70% 34%, #bcc7ff, transparent 10%), linear-gradient(135deg, #444957, #111522 58%, #02040a)', cost: 100 },
+  { id: 'sparkle-dark-purple', name: 'Sparkle Dark Purple', hue: 276, sparkle: true, swatch: 'radial-gradient(circle at 28% 25%, #fff, transparent 9%), radial-gradient(circle at 70% 34%, #e2c8ff, transparent 10%), linear-gradient(135deg, #8f5cff, #351064 58%, #12051f)', cost: 100 },
+  { id: 'sparkle-rainbow', name: 'Sparkle Rainbow', hue: 210, rainbow: true, sparkle: true, swatch: 'radial-gradient(circle at 28% 25%, #fff, transparent 9%), radial-gradient(circle at 70% 34%, #fff, transparent 10%), linear-gradient(135deg, #ff5e8a, #ffe36e, #57e89c, #4f8cff, #a96bff)', cost: 100 },
+  { id: 'sparkle-gold', name: 'Golden Sparkle', hue: 45, sparkle: true, swatch: 'radial-gradient(circle at 28% 25%, #fff, transparent 9%), radial-gradient(circle at 70% 34%, #fff6b8, transparent 10%), linear-gradient(135deg, #fff2a8, #d7a31c 62%, #7d5600)', cost: 100 },
+  { id: 'sparkle-silver', name: 'Silver Sparkle', hue: 210, sparkle: true, swatch: 'radial-gradient(circle at 28% 25%, #fff, transparent 9%), radial-gradient(circle at 70% 34%, #eef8ff, transparent 10%), linear-gradient(135deg, #ffffff, #aeb8c6 58%, #5b6470)', cost: 100 },
+  { id: 'sparkle-teal', name: 'Sparkle Teal', hue: 178, sparkle: true, swatch: 'radial-gradient(circle at 28% 25%, #fff, transparent 9%), radial-gradient(circle at 70% 34%, #d9fff8, transparent 10%), linear-gradient(135deg, #b6fff4, #28d7c8 58%, #087b7a)', cost: 100 },
 ];
 const SHOP_WEAPONS = [
   { id: 'gun', name: 'Twin Guns', icon: '🔫', cost: 40, maxLevel: 1 },
   { id: 'bomb', name: 'Boss Bombs', icon: '💣', cost: 55, maxLevel: 2 },
 ];
+const JET_TRAILS = [
+  { id: 'none', name: 'No Trail', cost: 0, swatch: 'rgba(255,255,255,0.12)' },
+  { id: 'blue-line', name: 'Blue Lines', cost: 60, colors: ['#8ed8ff', '#4f8cff'], swatch: 'linear-gradient(135deg, #8ed8ff, #4f8cff)' },
+  { id: 'gold-line', name: 'Gold Lines', cost: 80, colors: ['#fff2a8', '#f0a830'], swatch: 'linear-gradient(135deg, #fff2a8, #f0a830)' },
+  { id: 'teal-line', name: 'Teal Lines', cost: 80, colors: ['#b6fff4', '#20d6c8'], swatch: 'linear-gradient(135deg, #b6fff4, #20d6c8)' },
+  { id: 'rainbow-line', name: 'Rainbow Lines', cost: 100, rainbow: true, swatch: 'linear-gradient(135deg, #ff5e8a, #ffe36e, #57e89c, #4f8cff)' },
+];
 let jetColorId = 'blue';
+let jetTrailId = 'none';
 let shopPoints = 0;
 let unlockedColors = ['blue'];
+let unlockedTrails = ['none'];
 let weaponUpgrades = { gun: 0, bomb: 0 };
 let shopOpen = false;
 
 try { jetColorId = localStorage.getItem('ashleyJetColor') || 'blue'; } catch (e) {}
+try { jetTrailId = localStorage.getItem('ashleyJetTrail') || 'none'; } catch (e) {}
 try { shopPoints = parseInt(localStorage.getItem('ashleyJetPoints') || '0', 10) || 0; } catch (e) {}
 try {
   const saved = JSON.parse(localStorage.getItem('ashleyJetUnlocked') || '["blue"]');
   if (Array.isArray(saved) && saved.length) unlockedColors = saved;
+} catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem('ashleyJetUnlockedTrails') || '["none"]');
+  if (Array.isArray(saved) && saved.length) unlockedTrails = saved;
 } catch (e) {}
 try {
   const saved = JSON.parse(localStorage.getItem('ashleyJetWeapons') || '{}');
@@ -712,22 +1095,35 @@ try {
   }
 } catch (e) {}
 unlockedColors = unlockedColors.filter((id) => JET_COLORS.some((c) => c.id === id));
+unlockedTrails = unlockedTrails.filter((id) => JET_TRAILS.some((t) => t.id === id));
 for (const c of JET_COLORS) {
   if (c.cost === 0 && !unlockedColors.includes(c.id)) unlockedColors.push(c.id);
 }
+for (const t of JET_TRAILS) {
+  if (t.cost === 0 && !unlockedTrails.includes(t.id)) unlockedTrails.push(t.id);
+}
 if (!JET_COLORS.some((c) => c.id === jetColorId)) jetColorId = 'blue';
+if (!JET_TRAILS.some((t) => t.id === jetTrailId)) jetTrailId = 'none';
 if (!unlockedColors.includes('blue')) unlockedColors.unshift('blue');
 if (!unlockedColors.includes(jetColorId)) jetColorId = 'blue';
+if (!unlockedTrails.includes('none')) unlockedTrails.unshift('none');
+if (!unlockedTrails.includes(jetTrailId)) jetTrailId = 'none';
 
 function isColorUnlocked(id) {
   return unlockedColors.includes(id);
 }
 
+function isTrailUnlocked(id) {
+  return unlockedTrails.includes(id);
+}
+
 function saveShopState() {
   try {
     localStorage.setItem('ashleyJetColor', jetColorId);
+    localStorage.setItem('ashleyJetTrail', jetTrailId);
     localStorage.setItem('ashleyJetPoints', String(shopPoints));
     localStorage.setItem('ashleyJetUnlocked', JSON.stringify(unlockedColors));
+    localStorage.setItem('ashleyJetUnlockedTrails', JSON.stringify(unlockedTrails));
     localStorage.setItem('ashleyJetWeapons', JSON.stringify(weaponUpgrades));
   } catch (err) {}
 }
@@ -758,6 +1154,24 @@ function equipColor(id) {
   updateShopUI();
 }
 
+function unlockTrail(id) {
+  const trail = JET_TRAILS.find((t) => t.id === id);
+  if (!trail || isTrailUnlocked(id) || shopPoints < trail.cost) return false;
+  shopPoints -= trail.cost;
+  unlockedTrails.push(id);
+  jetTrailId = id;
+  saveShopState();
+  updateShopUI();
+  return true;
+}
+
+function equipTrail(id) {
+  if (!isTrailUnlocked(id)) return;
+  jetTrailId = id;
+  saveShopState();
+  updateShopUI();
+}
+
 function weaponLevel(id) {
   const weapon = SHOP_WEAPONS.find((w) => w.id === id);
   return clamp(weaponUpgrades[id] || 0, 0, weapon ? weapon.maxLevel : 0);
@@ -782,16 +1196,84 @@ function jetPaint(hue) {
     bodyMid: `hsl(${hue}, 58%, 80%)`,
     tip: `hsl(${(hue + 180) % 360}, 75%, 58%)`,
     nose: `hsl(${(hue + 30) % 360}, 88%, 62%)`,
+    sparkle: false,
+    rainbow: false,
   };
 }
 
 function getJetPaint() {
   const id = isColorUnlocked(jetColorId) ? jetColorId : 'blue';
   const opt = JET_COLORS.find((c) => c.id === id) || JET_COLORS.find((c) => c.id === 'blue');
-  return jetPaint(opt.hue);
+  const paint = jetPaint(opt.hue);
+  if (id.includes('gold')) {
+    Object.assign(paint, {
+      wingLight: '#ffe88b',
+      wingDark: '#9a6a08',
+      tail: '#704a00',
+      bodyEdge: '#c89416',
+      bodyMid: '#fff4b8',
+      tip: '#ffffff',
+      nose: '#ffcf45',
+    });
+  } else if (id.includes('rainbow')) {
+    Object.assign(paint, {
+      wingLight: '#ffffff',
+      wingDark: '#4f8cff',
+      tail: '#7b4dff',
+      bodyEdge: '#ff5e8a',
+      bodyMid: '#fff2a8',
+      tip: '#57e89c',
+      nose: '#ff5e8a',
+      rainbow: true,
+    });
+  } else if (id.includes('black')) {
+    Object.assign(paint, {
+      wingLight: '#414756',
+      wingDark: '#070a12',
+      tail: '#03050a',
+      bodyEdge: '#191e2c',
+      bodyMid: '#555d70',
+      tip: '#b8f4ff',
+      nose: '#2c3448',
+    });
+  } else if (id.includes('dark-purple')) {
+    Object.assign(paint, {
+      wingLight: '#8f5cff',
+      wingDark: '#2a0c4f',
+      tail: '#160529',
+      bodyEdge: '#4b1684',
+      bodyMid: '#c7a4ff',
+      tip: '#ffe36e',
+      nose: '#7b36ff',
+    });
+  } else if (id.includes('silver')) {
+    Object.assign(paint, {
+      wingLight: '#f3f8ff',
+      wingDark: '#7a8594',
+      tail: '#59616c',
+      bodyEdge: '#aeb8c6',
+      bodyMid: '#ffffff',
+      tip: '#9ef4ff',
+      nose: '#dbe4ef',
+    });
+  } else if (id.includes('teal')) {
+    Object.assign(paint, {
+      wingLight: '#92fff4',
+      wingDark: '#0e898a',
+      tail: '#086366',
+      bodyEdge: '#20b9b6',
+      bodyMid: '#d0fff8',
+      tip: '#ffe36e',
+      nose: '#52f2df',
+    });
+  }
+  paint.sparkle = !!opt.sparkle;
+  paint.rainbow = paint.rainbow || !!opt.rainbow;
+  return paint;
 }
 
 const jet = { x: 0, y: 0, targetX: 0, targetY: 0, vx: 0, vy: 0, w: 56, bank: 0, pitch: 0 };
+const jetTrail = [];
 
 function jetMargins() {
   const s = jet.w / 64;
@@ -801,6 +1283,76 @@ function jetMargins() {
     maxY: H - 30 * s - 14,
     defaultY: H - jet.w * 1.7 - 14,
   };
+}
+
+function currentTrailStyle() {
+  return JET_TRAILS.find((t) => t.id === jetTrailId) || JET_TRAILS[0];
+}
+
+function updateJetTrail(dt) {
+  const style = currentTrailStyle();
+  if (style.id === 'none' || state !== 'playing') {
+    jetTrail.length = 0;
+    return;
+  }
+  const tailY = jet.y + 28 * (jet.w / 64);
+  const last = jetTrail[jetTrail.length - 1];
+  if (!last || Math.hypot(jet.x - last.x, tailY - last.y) > 6 * K) {
+    jetTrail.push({ x: jet.x, y: tailY, life: 1, maxLife: 1 });
+  }
+  const maxPoints = 38;
+  while (jetTrail.length > maxPoints) jetTrail.shift();
+  for (let i = jetTrail.length - 1; i >= 0; i--) {
+    jetTrail[i].life -= dt * 0.8;
+    if (jetTrail[i].life <= 0) jetTrail.splice(i, 1);
+  }
+}
+
+function drawJetTrail(t) {
+  const style = currentTrailStyle();
+  if (style.id === 'none' || jetTrail.length < 2) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  for (let pass = 0; pass < 2; pass++) {
+    ctx.beginPath();
+    for (let i = 0; i < jetTrail.length; i++) {
+      const p = jetTrail[i];
+      if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+    }
+    const tail = jetTrail[0];
+    const head = jetTrail[jetTrail.length - 1];
+    const g = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y);
+    if (style.rainbow) {
+      g.addColorStop(0, 'rgba(255, 94, 138, 0)');
+      g.addColorStop(0.25, 'rgba(255, 227, 110, 0.55)');
+      g.addColorStop(0.55, 'rgba(87, 232, 156, 0.7)');
+      g.addColorStop(1, 'rgba(79, 140, 255, 0.9)');
+    } else {
+      g.addColorStop(0, hexToRgba(style.colors[0], 0));
+      g.addColorStop(0.45, hexToRgba(style.colors[0], 0.45));
+      g.addColorStop(1, hexToRgba(style.colors[1], 0.9));
+    }
+    ctx.strokeStyle = g;
+    ctx.lineWidth = (pass === 0 ? 12 : 4) * Math.max(K, 0.8);
+    ctx.globalAlpha = pass === 0 ? 0.22 : 0.82;
+    ctx.stroke();
+  }
+
+  if (style.rainbow) {
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = '#ffffff';
+    for (let i = 2; i < jetTrail.length; i += 9) {
+      const p = jetTrail[i];
+      const s = (1.8 + Math.sin(t * 5 + i) * 0.6) * Math.max(K, 0.8);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
 }
 
 function drawJet(t, crashed) {
@@ -882,6 +1434,37 @@ function drawJet(t, crashed) {
   ctx.closePath();
   ctx.fill();
 
+  if (paint.rainbow) {
+    const stripes = ['#ff3f63', '#ff9d3f', '#ffe36e', '#57e89c', '#4f8cff', '#a96bff'];
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    for (let i = 0; i < stripes.length; i++) {
+      const y = -24 + i * 8.5;
+      ctx.fillStyle = stripes[i];
+      ctx.beginPath();
+      ctx.moveTo(-7.5, y);
+      ctx.quadraticCurveTo(-10, y + 4, -8.4, y + 8);
+      ctx.lineTo(8.4, y + 8);
+      ctx.quadraticCurveTo(10, y + 4, 7.5, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 0.86;
+    for (let i = 0; i < stripes.length; i++) {
+      const x0 = -30 + i * 10;
+      ctx.fillStyle = stripes[i];
+      ctx.beginPath();
+      ctx.moveTo(x0, 21.5);
+      ctx.lineTo(x0 + 8, 24.8);
+      ctx.lineTo(x0 + 15, 27.3);
+      ctx.lineTo(x0 + 8, 18.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   // --- Cockpit canopy ---
   const glassG = ctx.createLinearGradient(0, -14, 0, 4);
   glassG.addColorStop(0, '#b8f4ff');
@@ -895,6 +1478,35 @@ function drawJet(t, crashed) {
   ctx.beginPath();
   ctx.ellipse(-1.8, -10, 1.6, 3.4, -0.25, 0, Math.PI * 2);
   ctx.fill();
+
+  if (paint.sparkle) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 1.4;
+    const glints = [
+      { x: -18, y: 12, s: 3.8, p: 0 },
+      { x: 16, y: 11, s: 3.4, p: 1.7 },
+      { x: 0, y: -18, s: 3.2, p: 3.1 },
+      { x: -4, y: 13, s: 2.6, p: 4.4 },
+    ];
+    for (const g of glints) {
+      const a = 0.55 + 0.45 * Math.sin(t * 5.8 + g.p);
+      ctx.globalAlpha = a;
+      ctx.beginPath();
+      ctx.moveTo(g.x - g.s, g.y);
+      ctx.lineTo(g.x + g.s, g.y);
+      ctx.moveTo(g.x, g.y - g.s);
+      ctx.lineTo(g.x, g.y + g.s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, g.s * 0.32, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.72)';
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
 
   // Dizzy stars when crashed
   if (crashed) {
@@ -1001,6 +1613,7 @@ function updateAliens(dt) {
 
 function drawAlien(a, t) {
   const { x, y, r, palette: p } = a;
+  const mood = clamp(level - 1, 0, 2);
   ctx.save();
   ctx.translate(x, y);
 
@@ -1037,6 +1650,21 @@ function drawAlien(a, t) {
     ctx.arc(-r * 0.11 + lookX * r * 0.05, -r * 0.42, r * 0.055, 0, Math.PI * 2);
     ctx.arc( r * 0.11 + lookX * r * 0.05, -r * 0.42, r * 0.055, 0, Math.PI * 2);
     ctx.fill();
+    if (mood > 0) {
+      ctx.strokeStyle = '#1a1a2e';
+      ctx.lineWidth = r * 0.045;
+      ctx.lineCap = 'round';
+      for (const side of [-1, 1]) {
+        const ex = side * r * 0.11;
+        ctx.beginPath();
+        ctx.moveTo(ex - side * r * 0.11, -r * (0.50 + mood * 0.03));
+        ctx.lineTo(ex + side * r * 0.07, -r * (0.46 - mood * 0.01));
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(0, -r * 0.32, r * (0.12 + mood * 0.03), 1.12 * Math.PI, 1.88 * Math.PI);
+      ctx.stroke();
+    }
     // Saucer body
     const bodyG = ctx.createLinearGradient(0, -r * 0.3, 0, r * 0.5);
     bodyG.addColorStop(0, p.light);
@@ -1082,7 +1710,8 @@ function drawAlien(a, t) {
     ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
     ctx.fill();
     // Eyes (googly, tracking the jet)
-    for (const ex of [-r * 0.3, r * 0.3]) {
+    for (const side of [-1, 1]) {
+      const ex = side * r * 0.3;
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(ex, -r * 0.15, r * 0.24, 0, Math.PI * 2);
@@ -1091,12 +1720,25 @@ function drawAlien(a, t) {
       ctx.beginPath();
       ctx.arc(ex + lookX * r * 0.1, -r * 0.13 + r * 0.06, r * 0.11, 0, Math.PI * 2);
       ctx.fill();
+      if (mood > 0) {
+        ctx.strokeStyle = '#1a1a2e';
+        ctx.lineWidth = r * (0.06 + mood * 0.015);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(ex + side * r * 0.18, -r * (0.44 + mood * 0.03));
+        ctx.lineTo(ex - side * r * 0.12, -r * (0.31 - mood * 0.01));
+        ctx.stroke();
+      }
     }
-    // Smile
+    // Mood mouth: smile on level 1, then madder frowns.
     ctx.strokeStyle = 'rgba(20, 20, 46, 0.75)';
-    ctx.lineWidth = r * 0.07;
+    ctx.lineWidth = r * (0.07 + mood * 0.01);
     ctx.beginPath();
-    ctx.arc(0, r * 0.22, r * 0.3, 0.25 * Math.PI, 0.75 * Math.PI);
+    if (mood === 0) {
+      ctx.arc(0, r * 0.22, r * 0.3, 0.25 * Math.PI, 0.75 * Math.PI);
+    } else {
+      ctx.arc(0, r * (0.55 + mood * 0.04), r * (0.28 + mood * 0.04), 1.2 * Math.PI, 1.8 * Math.PI);
+    }
     ctx.stroke();
   }
   ctx.restore();
@@ -1111,6 +1753,11 @@ function shade(hex) {
   const g = ((n >> 8) & 255) * 0.55 | 0;
   const b = (n & 255) * 0.55 | 0;
   return (shadeCache[hex] = `rgb(${r},${g},${b})`);
+}
+
+function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
 // ---------- "+1" popups ----------
@@ -1171,7 +1818,7 @@ function fireBullet() {
   const bombLevel = weaponLevel('bomb');
   const bombEvery = bombLevel === 0 ? 0 : (bombLevel === 1 ? 5 : 3);
   const bombShot = bombEvery > 0 && shotsFired % bombEvery === 0;
-  const pattern = gunLevel === 0 ? [0] : [-10, 10];
+  const pattern = gunLevel > 0 && shotsFired % 3 === 0 ? [-10, 10] : [0];
   const bombIndex = Math.floor(pattern.length / 2);
   for (let i = 0; i < pattern.length; i++) {
     const offset = pattern[i];
@@ -1311,6 +1958,18 @@ const DIFFICULTY_SETTINGS = [
   { id: 'medium', label: 'MEDIUM', speedMul: 1, spawnMul: 1, bossAtMul: 1, bossHpMul: 1, bossFireMul: 1 },
   { id: 'hard', label: 'HARD', speedMul: 1.18, spawnMul: 0.78, bossAtMul: 1.12, bossHpMul: 1.2, bossFireMul: 0.82 },
 ];
+const STAGE_CHOICES = [
+  { id: 'space', label: 'SPACE' },
+  { id: 'moon', label: 'MOON' },
+  { id: 'earth', label: 'PLUTO' },
+  { id: 'saturn', label: 'SATURN' },
+];
+let selectedStageId = 'space';
+let lastStageMoveAt = -Infinity;
+try {
+  const savedStage = localStorage.getItem('ashleyJetStage');
+  if (STAGE_CHOICES.some((s) => s.id === savedStage)) selectedStageId = savedStage;
+} catch (e) {}
 let selectedDifficultyId = 'medium';
 try {
   const savedDifficulty = localStorage.getItem('ashleyJetDifficulty');
@@ -1321,6 +1980,28 @@ let phase = 'normal';        // 'normal' | 'boss'
 let dodgesThisLevel = 0;
 function currentDifficultySetting() {
   return DIFFICULTY_SETTINGS.find((d) => d.id === selectedDifficultyId) || DIFFICULTY_SETTINGS[1];
+}
+function currentStageChoice() {
+  return STAGE_CHOICES.find((s) => s.id === selectedStageId) || STAGE_CHOICES[0];
+}
+function currentStageBest() {
+  return stageBests[selectedStageId] || 0;
+}
+function setCurrentStageBest(value) {
+  stageBests[selectedStageId] = value;
+  best = value;
+  try {
+    localStorage.setItem('ashleyJetStageBests', JSON.stringify(stageBests));
+    localStorage.setItem('ashleyJetBest', String(Math.max(...Object.values(stageBests))));
+  } catch (e) {}
+}
+function moveStage(step) {
+  const now = performance.now();
+  if (now - lastStageMoveAt < 320) return;
+  lastStageMoveAt = now;
+  const i = STAGE_CHOICES.findIndex((s) => s.id === selectedStageId);
+  const next = (i + step + STAGE_CHOICES.length) % STAGE_CHOICES.length;
+  chooseStage(STAGE_CHOICES[next].id);
 }
 function bossTargetDodges() {
   return Math.round(BOSS_AT * currentDifficultySetting().bossAtMul);
@@ -1358,9 +2039,9 @@ const BOSS_PALETTES = [
 ];
 function bossPalette() { return BOSS_PALETTES[level - 1] || BOSS_PALETTES[0]; }
 const BOSS_STAGES = [
-  { name: 'BLASTER', banner: 'BLASTER BOSS!', hp: 10, pattern: 'aimed', move: 'sway', interval: 1.45 },
-  { name: 'WAVER', banner: 'WAVE BOSS!', hp: 18, pattern: 'wave', move: 'figure8', interval: 1.2 },
-  { name: 'COMET', banner: 'COMET BOSS!', hp: 26, pattern: 'comet', move: 'dash', interval: 1.05 },
+  { name: 'BLASTER', banner: 'BLASTER BOSS!', hp: 16, pattern: 'aimed', move: 'sway', interval: 1.45 },
+  { name: 'WAVER', banner: 'WAVE BOSS!', hp: 22, pattern: 'wave', move: 'figure8', interval: 1.2 },
+  { name: 'COMET', banner: 'COMET BOSS!', hp: 30, pattern: 'comet', move: 'dash', interval: 1.05 },
 ];
 function bossStage() { return BOSS_STAGES[level - 1] || BOSS_STAGES[0]; }
 const boss = { active: false, x: 0, y: 0, r: 0, hp: 10, maxHp: 10, t: 0, flash: 0, fireTimer: 0, fireCount: 0, entering: false };
@@ -1383,6 +2064,10 @@ function updateBossBar() {
 function startBossFight() {
   phase = 'boss';
   boss.active = true;
+  aliens.length = 0;
+  bursts.length = 0;
+  popups.length = 0;
+  spawnTimer = 1.0;
   boss.r = clamp(Math.min(W, H) * 0.15, 46, 110);
   boss.x = W / 2;
   boss.y = -boss.r * 2;
@@ -1578,7 +2263,7 @@ function killBoss() {
   level++;
   dodgesThisLevel = 0;
   phase = 'normal';
-  scoreSubEl.innerHTML = currentDifficultySetting().label + ' &nbsp;•&nbsp; LEVEL ' + level;
+  scoreSubEl.innerHTML = currentStageChoice().label + ' &nbsp;•&nbsp; ' + currentDifficultySetting().label + ' &nbsp;•&nbsp; LEVEL ' + level;
   showBanner('LEVEL ' + level + '!');
 }
 
@@ -2080,10 +2765,21 @@ updateMuteBtn();
 let state = 'menu'; // 'menu' | 'playing' | 'over' | 'won'
 let score = 0;
 let best = 0;
-try { best = parseInt(localStorage.getItem('ashleyJetBest') || '0', 10) || 0; } catch (e) {}
+let stageBests = { space: 0, moon: 0, earth: 0, saturn: 0 };
+try {
+  const oldBest = parseInt(localStorage.getItem('ashleyJetBest') || '0', 10) || 0;
+  const savedBests = JSON.parse(localStorage.getItem('ashleyJetStageBests') || '{}');
+  if (savedBests && typeof savedBests === 'object') {
+    stageBests = Object.assign(stageBests, savedBests);
+  }
+  if (oldBest > stageBests.space) stageBests.space = oldBest;
+} catch (e) {}
 let elapsed = 0;
 let difficulty = 0;
 let crashTime = 0;
+let stillTime = 0;
+const STILL_DEATH_SECONDS = 5;
+const STILL_MOVE_SPEED = 18;
 
 // Shop sidebar
 const shopButtons = document.querySelectorAll('.shop-open-btn');
@@ -2138,7 +2834,7 @@ function updateShopUI() {
     const status = document.createElement('div');
     status.className = 'shop-item-status';
     if (w.id === 'gun') {
-      status.textContent = levelNow === 0 ? 'Single shot' : 'Double shot';
+      status.textContent = levelNow === 0 ? 'Single shot' : 'Every 3rd shot is double';
     } else {
       status.textContent = levelNow === 0 ? 'No bombs yet' : (levelNow === 1 ? 'Level 1: every 5th shot' : 'Level 2: every 3rd shot');
     }
@@ -2158,6 +2854,63 @@ function updateShopUI() {
       btn.textContent = w.cost + ' pts';
       btn.disabled = shopPoints < w.cost;
       btn.addEventListener('click', () => buyWeapon(w.id));
+    }
+
+    row.appendChild(swatch);
+    row.appendChild(info);
+    row.appendChild(btn);
+    shopColorsEl.appendChild(row);
+  }
+
+  const trailsTitle = document.createElement('div');
+  trailsTitle.className = 'shop-section-title';
+  trailsTitle.textContent = 'Jet Trails';
+  shopColorsEl.appendChild(trailsTitle);
+
+  for (const tr of JET_TRAILS) {
+    const unlocked = isTrailUnlocked(tr.id);
+    const equipped = jetTrailId === tr.id;
+    const row = document.createElement('div');
+    row.className = 'shop-item' + (equipped ? ' equipped' : '');
+
+    const swatch = document.createElement('div');
+    swatch.className = 'shop-swatch' + (unlocked ? '' : ' locked');
+    swatch.style.background = tr.swatch;
+
+    const info = document.createElement('div');
+    info.className = 'shop-item-info';
+    const name = document.createElement('div');
+    name.className = 'shop-item-name';
+    name.textContent = tr.name;
+    const status = document.createElement('div');
+    status.className = 'shop-item-status';
+    if (unlocked) {
+      status.textContent = equipped ? 'Tracking your flight path' : 'Unlocked';
+    } else {
+      status.textContent = 'Locked - costs ' + tr.cost + ' points';
+    }
+    info.appendChild(name);
+    info.appendChild(status);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'shop-item-btn';
+    btn.addEventListener('pointerdown', stopGameTap);
+    if (unlocked) {
+      if (equipped) {
+        btn.className += ' equipped-label';
+        btn.textContent = 'ON';
+        btn.disabled = true;
+      } else {
+        btn.className += ' equip';
+        btn.textContent = 'EQUIP';
+        btn.addEventListener('click', () => equipTrail(tr.id));
+      }
+    } else {
+      btn.className += ' unlock';
+      btn.textContent = tr.cost + ' pts';
+      btn.disabled = shopPoints < tr.cost;
+      btn.addEventListener('click', () => unlockTrail(tr.id));
     }
 
     row.appendChild(swatch);
@@ -2244,14 +2997,17 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function startGame() {
+  best = currentStageBest();
   aliens.length = 0;
   popups.length = 0;
   exhaust.length = 0;
+  jetTrail.length = 0;
   bullets.length = 0;
   bursts.length = 0;
   score = 0;
   elapsed = 0;
   difficulty = 0;
+  stillTime = 0;
   spawnTimer = 1.0;
   setAmmo(START_AMMO);
   shotsFired = 0;
@@ -2264,7 +3020,7 @@ function startGame() {
   smokes.length = 0;
   banner = null;
   bossBarEl.classList.remove('visible');
-  scoreSubEl.innerHTML = currentDifficultySetting().label + ' &nbsp;•&nbsp; LEVEL 1';
+  scoreSubEl.innerHTML = currentStageChoice().label + ' &nbsp;•&nbsp; ' + currentDifficultySetting().label + ' &nbsp;•&nbsp; LEVEL 1';
   jet.x = jet.targetX = W / 2;
   jet.y = jet.targetY = jetMargins().defaultY;
   jet.bank = 0;
@@ -2287,10 +3043,10 @@ function gameOver() {
   sfxCrash();
   hudEl.classList.remove('visible');
   const earned = bankRunPoints(score);
+  best = currentStageBest();
   const isNewBest = score > best;
   if (isNewBest) {
-    best = score;
-    try { localStorage.setItem('ashleyJetBest', String(best)); } catch (e) {}
+    setCurrentStageBest(score);
   }
   finalScoreEl.textContent = score;
   bestLineEl.textContent = 'Best: ' + best;
@@ -2302,6 +3058,7 @@ function gameOver() {
     pointsEarnedLine.style.display = 'none';
   }
   updateShopBtnVisibility();
+  updateStageUI();
   setTimeout(() => overEl.classList.remove('hidden'), 850);
 }
 
@@ -2310,10 +3067,10 @@ function winGame() {
   overSince = performance.now();
   hudEl.classList.remove('visible');
   const earned = bankRunPoints(score);
+  best = currentStageBest();
   const isNewBest = score > best;
   if (isNewBest) {
-    best = score;
-    try { localStorage.setItem('ashleyJetBest', String(best)); } catch (e) {}
+    setCurrentStageBest(score);
   }
   winScoreEl.textContent = score;
   winBestEl.style.display = isNewBest ? 'inline-block' : 'none';
@@ -2324,11 +3081,13 @@ function winGame() {
     winPointsEarned.style.display = 'none';
   }
   updateShopBtnVisibility();
+  updateStageUI();
   sfxWin();
   setTimeout(() => winEl.classList.remove('hidden'), 1400);
 }
 
 function checkCollision() {
+  if (phase === 'boss') return false;
   const jr = jet.w * 0.30; // forgiving hitbox
   const jx = jet.x, jy = jet.y;
   for (const a of aliens) {
@@ -2350,7 +3109,7 @@ const TAP_MAX_DIST = 14;   // px of finger travel before a press counts as a dra
 const TAP_MAX_MS = 280;    // press longer than this = steering, not shooting
 
 function isUiTap(target) {
-  return target.closest('#shop, #shop-backdrop, .shop-open-btn, #mute-btn');
+  return target.closest('#shop, #shop-backdrop, .shop-open-btn, #mute-btn, .stage-mode');
 }
 
 function tryStartFromOverlay() {
@@ -2378,7 +3137,22 @@ function bindOverlayButton(btn, handler) {
 const startBtn = document.getElementById('start-btn');
 const overRestartBtn = document.getElementById('over-restart-btn');
 const winRestartBtn = document.getElementById('win-restart-btn');
+const stageModeEls = document.querySelectorAll('.stage-mode');
+const stagePrevBtns = document.querySelectorAll('.stage-prev');
+const stageNextBtns = document.querySelectorAll('.stage-next');
 const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+
+function updateStageUI() {
+  const stage = currentStageChoice();
+  best = currentStageBest();
+  for (const el of stageModeEls) {
+    const name = el.querySelector('.stage-mode-name');
+    const bestEl = el.querySelector('.stage-mode-best');
+    if (name) name.textContent = stage.label;
+    if (bestEl) bestEl.textContent = 'BEST: ' + best;
+  }
+  if (state === 'over') bestLineEl.textContent = 'Best: ' + best;
+}
 
 function updateDifficultyUI() {
   for (const btn of difficultyBtns) {
@@ -2386,6 +3160,13 @@ function updateDifficultyUI() {
     btn.classList.toggle('selected', selected);
     btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
   }
+}
+
+function chooseStage(id) {
+  if (!STAGE_CHOICES.some((s) => s.id === id)) return;
+  selectedStageId = id;
+  try { localStorage.setItem('ashleyJetStage', selectedStageId); } catch (err) {}
+  updateStageUI();
 }
 
 function chooseDifficulty(id) {
@@ -2399,6 +3180,46 @@ bindOverlayButton(startBtn, tryStartFromOverlay);
 bindOverlayButton(overRestartBtn, tryRestartFromOverlay);
 bindOverlayButton(winRestartBtn, tryRestartFromOverlay);
 
+for (const btn of stagePrevBtns) {
+  btn.addEventListener('pointerdown', (e) => {
+    stopGameTap(e);
+    moveStage(-1);
+  });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    moveStage(-1);
+  });
+}
+
+for (const btn of stageNextBtns) {
+  btn.addEventListener('pointerdown', (e) => {
+    stopGameTap(e);
+    moveStage(1);
+  });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    moveStage(1);
+  });
+}
+
+for (const el of stageModeEls) {
+  let swipeStartX = 0;
+  let swipeStartY = 0;
+  el.addEventListener('pointerdown', (e) => {
+    stopGameTap(e);
+    swipeStartX = e.clientX;
+    swipeStartY = e.clientY;
+  });
+  el.addEventListener('pointerup', (e) => {
+    e.stopPropagation();
+    const dx = e.clientX - swipeStartX;
+    const dy = e.clientY - swipeStartY;
+    if (Math.abs(dx) > 72 && Math.abs(dx) > Math.abs(dy) * 1.8) {
+      moveStage(dx < 0 ? 1 : -1);
+    }
+  });
+}
+
 for (const btn of difficultyBtns) {
   btn.addEventListener('pointerdown', (e) => {
     stopGameTap(e);
@@ -2409,6 +3230,7 @@ for (const btn of difficultyBtns) {
     chooseDifficulty(btn.dataset.difficulty);
   });
 }
+updateStageUI();
 updateDifficultyUI();
 
 menuEl.addEventListener('click', (e) => {
@@ -2523,22 +3345,34 @@ function frame(now) {
     jet.y += (jet.targetY - jet.y) * Math.min(1, dt * 14);
     jet.vx = (jet.x - prevX) / Math.max(dt, 0.001);
     jet.vy = (jet.y - prevY) / Math.max(dt, 0.001);
+    if (Math.hypot(jet.vx, jet.vy) > STILL_MOVE_SPEED * K) {
+      stillTime = 0;
+    } else {
+      stillTime += dt;
+      if (stillTime >= STILL_DEATH_SECONDS) {
+        overSince = performance.now();
+        gameOver();
+      }
+    }
+    if (state !== 'playing') return;
     jet.bank += (clamp(jet.vx / 900, -1, 1) - jet.bank) * Math.min(1, dt * 10);
     jet.pitch += (clamp(jet.vy / 700, -0.6, 0.6) - jet.pitch) * Math.min(1, dt * 10);
 
-    // Spawn aliens (sparser during the boss fight, but still there to earn ammo)
-    spawnTimer -= dt;
-    if (spawnTimer <= 0) {
-      spawnAlien();
-      let gap = ((1.15 - difficulty * 0.72) * currentDifficultySetting().spawnMul) / levelSpeed();
-      if (phase === 'boss') gap *= 2.2;
-      spawnTimer = gap * rand(0.75, 1.25);
+    // Spawn aliens only outside boss fights; the boss bullets own that arena.
+    if (phase === 'normal') {
+      spawnTimer -= dt;
+      if (spawnTimer <= 0) {
+        spawnAlien();
+        const gap = ((1.15 - difficulty * 0.72) * currentDifficultySetting().spawnMul) / levelSpeed();
+        spawnTimer = gap * rand(0.75, 1.25);
+      }
     }
 
-    updateAliens(dt);
+    if (phase === 'normal') updateAliens(dt);
     updateBullets(dt);
     if (phase === 'boss') updateBoss(dt);
     updateBossBullets(dt);
+    updateJetTrail(dt);
     spawnExhaust(dt);
 
     if (state === 'playing' && checkCollision()) {
@@ -2566,9 +3400,15 @@ function frame(now) {
   // -- Draw --
   ctx.drawImage(bgCanvas, 0, 0, W, H);
   updateAndDrawStars(dt, t, starSpeed);
+  drawMoonStage(t, starSpeed);
+  drawEarthStage(t, starSpeed);
+  drawSaturnStage(t, starSpeed);
   updateAndDrawShootingStars(dt);
+  drawJetTrail(t);
   updateAndDrawExhaust(dt);
-  for (const a of aliens) drawAlien(a, t);
+  if (phase === 'normal') {
+    for (const a of aliens) drawAlien(a, t);
+  }
   drawBoss(t);
   updateAndDrawSmoke(dt);
   drawBullets();
